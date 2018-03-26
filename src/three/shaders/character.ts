@@ -1,4 +1,4 @@
-export const paletteVert: string = `
+export const characterVert: string = `
 varying vec2 uvPosition;
 
 void main()
@@ -8,7 +8,7 @@ void main()
 }
 `
 
-export const paletteFrag: string = `
+export const characterFrag: string = `
 uniform sampler2D texture;
 uniform vec2 mousePosition;
 
@@ -16,11 +16,11 @@ varying vec2 uvPosition;
 
 void main()
 {
-  float hPart  = 1.0 / 4.0;
+  float hPart  = 1.0 / 128.0;
   float left   = floor(mousePosition.x / hPart) * hPart;
   float right  = left + hPart;
 
-  float vPart  = 1.0 / 16.0;
+  float vPart  = 1.0 / 128.0;
   float bottom = ceil(mousePosition.y / vPart) * vPart;
   float top    = bottom - vPart;
 
@@ -29,6 +29,6 @@ void main()
               && uvPosition.y >= top
               && uvPosition.y <  bottom
     ? texture2D(texture, uvPosition)
-    : vec4(texture2D(texture, uvPosition).xyz * 0.4, 1.0);
+    : texture2D(texture, uvPosition); //vec4(texture2D(texture, uvPosition).xyz * 0.2, 1.0);
 }
 `

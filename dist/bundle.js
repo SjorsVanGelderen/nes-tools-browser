@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 6);
+/******/ 	return __webpack_require__(__webpack_require__.s = 7);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -5151,13 +5151,10 @@ exports.fullPalette = immutable_1.List([{ r: 101, g: 101, b: 101 },
 exports.paletteDimensions = { w: screen_1.frustumSize / 4,
     h: screen_1.frustumSize
 };
-exports.palettePosition = { x: screen_1.frustumSize / 2 //- paletteDimensions.w
-    ,
+exports.palettePosition = { x: (screen_1.frustumSize * screen_1.aspectRatio) / 2 - exports.paletteDimensions.w / 2,
     y: 0
 };
-exports.paletteStateZero = { position: exports.palettePosition
-    // , dimensions: paletteDimensions
-    ,
+exports.paletteStateZero = { position: exports.palettePosition,
     background: 64
 };
 exports.paletteData = immutable_1.Range(0, 64).flatMap((_, i) => {
@@ -5182,8 +5179,8 @@ exports.mouseStateZero = () => ({ position: { x: 0, y: 0 },
 });
 exports.inputStateZero = () => ({ mouse: exports.mouseStateZero()
 });
-exports.click = (p) => (i) => (Object.assign({}, i, { click: p }));
-exports.move = (p) => (i) => (Object.assign({}, i, { position: p }));
+exports.click = (p) => (i) => (Object.assign({}, i, { mouse: Object.assign({}, i.mouse, { click: p }) }));
+exports.move = (p) => (i) => (Object.assign({}, i, { mouse: Object.assign({}, i.mouse, { position: p }) }));
 exports.mousePosition = { x: 0, y: 0 };
 exports.convertPosition = (p) => {
     const widthRatio = window.innerWidth / p.x;
@@ -5201,6 +5198,9 @@ exports.onClick = (e) => {
     if (e != undefined) {
         exports.mouseClick = utils_1.makeOpt(exports.convertPosition({ x: e.x, y: e.y }));
     }
+};
+exports.flush = () => {
+    exports.mouseClick = utils_1.emptyOpt();
 };
 
 
@@ -51153,24 +51153,58 @@ function LensFlare() {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+const immutable_1 = __webpack_require__(2);
+const screen_1 = __webpack_require__(0);
+const palette_1 = __webpack_require__(3);
+exports.samplesStateZero = { samples: immutable_1.List([immutable_1.List([0, 1, 2]),
+        immutable_1.List([3, 4, 5]),
+        immutable_1.List([6, 7, 8]),
+        immutable_1.List([9, 10, 11])
+    ]),
+    background: 0
+};
+exports.samplesDimensions = { w: screen_1.frustumSize / 16,
+    h: screen_1.frustumSize / 16 * 10
+};
+exports.samplesPosition = { x: -screen_1.frustumSize * screen_1.aspectRatio / 2 + exports.samplesDimensions.w / 2,
+    y: 0
+};
+exports.samplesData = () => {
+    const b = palette_1.fullPalette.get(exports.samplesStateZero.background);
+    return exports.samplesStateZero.samples.flatMap(x => {
+        if (x == undefined)
+            return immutable_1.List();
+        const p = immutable_1.List([palette_1.fullPalette.get(x.get(0)),
+            palette_1.fullPalette.get(x.get(1)),
+            palette_1.fullPalette.get(x.get(2))
+        ]);
+        const result = p.flatMap(c => c != undefined
+            ? immutable_1.List([c.r, c.g, c.b])
+            : immutable_1.List()).toList();
+        return result;
+    })
+        .concat(immutable_1.List([b.r, b.g, b.b]))
+        .toList();
+};
+
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
 const utils_1 = __webpack_require__(1);
 const input_1 = __webpack_require__(4);
-const state_1 = __webpack_require__(7);
+const three_1 = __webpack_require__(9);
+const state_1 = __webpack_require__(8);
 const update = (state) => {
     const s = (Object.assign({}, state, { input: utils_1.run(input_1.click(input_1.mouseClick))(input_1.move(input_1.mousePosition))("with")(state.input) }));
+    input_1.flush();
     const t = s.three;
-    //mouseClick = emptyOpt()
-    // const p: Mesh = s.three.meshes.get("palette")
-    // const pa: PaletteState = s.palette
-    // const mPos: Point = mousePosition //s.input.mouse.position
-    // const pos: Point =
-    //   { x: -((p.position.x - pa.dimensions.w / 2 - mPos.x) / pa.dimensions.w)
-    //   , y: -((p.position.y - pa.dimensions.h / 2 + mPos.y) / pa.dimensions.h)
-    //   }
-    // const ps: ShaderMaterial = p.material as ShaderMaterial
-    // const u: PaletteUniforms = ps.uniforms as PaletteUniforms
-    // u.mousePosition.value = pos
-    s.three.renderer.render(state.three.scene, state.three.camera);
+    three_1.updateThreePalette(t, s.palette, s.input.mouse.position);
+    t.renderer.render(t.scene, t.camera);
     window.requestAnimationFrame(() => update(s));
 };
 const start = () => {
@@ -51184,13 +51218,13 @@ start();
 
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const three_1 = __webpack_require__(8);
+const three_1 = __webpack_require__(9);
 const input_1 = __webpack_require__(4);
 // import
 //   { CharacterState
@@ -51198,7 +51232,7 @@ const input_1 = __webpack_require__(4);
 //   } from "./character"
 const character_map_1 = __webpack_require__(14);
 const palette_1 = __webpack_require__(3);
-const samples_1 = __webpack_require__(13);
+const samples_1 = __webpack_require__(6);
 exports.stateZero = () => {
     return ({ three: three_1.threeStateZero(),
         input: input_1.inputStateZero()
@@ -51212,30 +51246,25 @@ exports.stateZero = () => {
 
 
 /***/ }),
-/* 8 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const ColorSpec = __webpack_require__(9);
+const ColorSpec = __webpack_require__(10);
 const immutable_1 = __webpack_require__(2);
 const three_1 = __webpack_require__(5);
 const screen_1 = __webpack_require__(0);
-// import 
-//   { makeSurface
-//   } from "./mesh"
-// import
-//   { makeCharacterMesh
-//   } from "./character"
-const mesh_1 = __webpack_require__(10);
+const mesh_1 = __webpack_require__(11);
+const palette_1 = __webpack_require__(3);
 exports.threeStateZero = () => {
     const scene = makeScene();
     const camera = makeCamera();
     const renderer = makeRenderer();
     const meshes = immutable_1.Map([["palette", mesh_1.makeFullPaletteMesh()],
-        ["samples", mesh_1.makeSamplesMesh()]
-        // , [ "character", makeCharacterMesh()   ]
+        ["samples", mesh_1.makeSamplesMesh()],
+        ["character", mesh_1.makeCharacterMesh()]
     ]);
     meshes.valueSeq().forEach(x => x != undefined ? scene.add(x) : {});
     const shaders = immutable_1.Map();
@@ -51263,10 +51292,19 @@ const makeCamera = () => {
     camera.lookAt(new three_1.Vector3(0, 0, 0));
     return camera;
 };
+exports.updateThreePalette = (s, pa, mousePosition) => {
+    const p = s.meshes.get("palette");
+    const pos = { x: -((p.position.x - palette_1.paletteDimensions.w / 2 - mousePosition.x) / palette_1.paletteDimensions.w),
+        y: -((p.position.y - palette_1.paletteDimensions.h / 2 + mousePosition.y) / palette_1.paletteDimensions.h)
+    };
+    const ps = p.material;
+    const u = ps.uniforms;
+    u.mousePosition.value = pos;
+};
 
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -51284,17 +51322,19 @@ exports.selection = circleInTheSand;
 
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const three_1 = __webpack_require__(5);
-const palette_1 = __webpack_require__(11);
-const samples_1 = __webpack_require__(12);
+const palette_1 = __webpack_require__(12);
+const samples_1 = __webpack_require__(13);
+const character_1 = __webpack_require__(17);
 const palette_2 = __webpack_require__(3);
-const samples_2 = __webpack_require__(13);
+const samples_2 = __webpack_require__(6);
+const character_2 = __webpack_require__(15);
 exports.makeSurfaceGeometry = (dimensions) => {
     const geometry = new three_1.PlaneGeometry(dimensions.x, dimensions.y, 32);
     return geometry;
@@ -51322,7 +51362,7 @@ exports.makeFullPaletteMesh = () => {
 };
 exports.makeSamplesMesh = () => {
     const dataArray = new Uint8Array(samples_2.samplesData().toArray());
-    const texture = new three_1.DataTexture(dataArray, 10, 1, three_1.RGBFormat);
+    const texture = new three_1.DataTexture(dataArray, 1, 10, three_1.RGBFormat);
     texture.needsUpdate = true;
     const uniforms = { texture: new three_1.Uniform(texture),
         mousePosition: new three_1.Uniform(new three_1.Vector2(0, 0))
@@ -51340,10 +51380,45 @@ exports.makeSamplesMesh = () => {
     samples.updateMatrix();
     return samples;
 };
+exports.makeCharacterMesh = () => {
+    const dataArray = new Uint8Array(character_2.characterData().toArray());
+    const texture = new three_1.DataTexture(dataArray, 128, 128, three_1.RGBFormat);
+    texture.needsUpdate = true;
+    const uniforms = { texture: new three_1.Uniform(texture),
+        mousePosition: new three_1.Uniform(new three_1.Vector2(0, 0))
+    };
+    const shaderData = { uniforms: uniforms,
+        vertexShader: character_1.characterVert,
+        fragmentShader: character_1.characterFrag
+    };
+    const dimensions = new three_1.Vector2(character_2.characterDimensions.w, character_2.characterDimensions.h);
+    const material = new three_1.ShaderMaterial(shaderData);
+    const geometry = exports.makeSurfaceGeometry(dimensions);
+    const character = new three_1.Mesh(geometry, material);
+    character.matrixAutoUpdate = false;
+    character.position.set(character_2.characterPosition.x, character_2.characterPosition.y, -1);
+    character.updateMatrix();
+    return character;
+};
+// export const makeCharacterMesh: () => Mesh = () => {
+//   const characterSize: number = 16
+//   const characterData: List<number> = Range(0, characterSize ** 2 * 3).map(x => 255).toList()
+//   const character: Mesh = makeSurface
+//     (new Vector2(frustumSize * aspectRatio / - 2, frustumSize * aspectRatio / - 2))
+//     (new Vector2(characterSize, characterSize))
+//     (characterData)
+//   character.position.set(-300, 0, 0)
+//   return character
+// }
+// export const characterToSurface: (p: Palette) => (c: Character) => Uint8ClampedArray =
+//   (p: Palette) => (c: Character) => {
+//     const data: Uint8ClampedArray = toneMapToData(p)(c.map.tones).toArray()
+//     return data
+//   }
 
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -51379,13 +51454,13 @@ void main()
               && uvPosition.y >= top
               && uvPosition.y <  bottom
     ? texture2D(texture, uvPosition)
-    : texture2D(texture, uvPosition); //vec4(texture2D(texture, uvPosition).xyz * 0.2, 1.0);
+    : vec4(texture2D(texture, uvPosition).xyz * 0.4, 1.0);
 }
 `;
 
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -51408,11 +51483,11 @@ varying vec2 uvPosition;
 
 void main()
 {
-  float hPart  = 1.0 / 4.0;
+  float hPart  = 1.0 / 16.0;
   float left   = floor(mousePosition.x / hPart) * hPart;
   float right  = left + hPart;
 
-  float vPart  = 1.0 / 16.0;
+  float vPart  = 1.0 / 4.0;
   float bottom = ceil(mousePosition.y / vPart) * vPart;
   float top    = bottom - vPart;
 
@@ -51427,49 +51502,6 @@ void main()
 
 
 /***/ }),
-/* 13 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-const immutable_1 = __webpack_require__(2);
-const screen_1 = __webpack_require__(0);
-const palette_1 = __webpack_require__(3);
-exports.samplesStateZero = { samples: immutable_1.List([immutable_1.List([0, 1, 2]),
-        immutable_1.List([3, 4, 5]),
-        immutable_1.List([6, 7, 8]),
-        immutable_1.List([9, 10, 11])
-    ]),
-    background: 0
-};
-exports.samplesPosition = { x: 0 //frustumSize / 2 + frustumSize / 8
-    ,
-    y: 0
-};
-exports.samplesDimensions = { w: screen_1.frustumSize / 16 * 10,
-    h: screen_1.frustumSize / 16
-};
-exports.samplesData = () => {
-    const b = palette_1.fullPalette.get(exports.samplesStateZero.background);
-    return exports.samplesStateZero.samples.flatMap(x => {
-        if (x == undefined)
-            return immutable_1.List();
-        const p = immutable_1.List([palette_1.fullPalette.get(x.get(0)),
-            palette_1.fullPalette.get(x.get(1)),
-            palette_1.fullPalette.get(x.get(2))
-        ]);
-        const result = p.flatMap(c => c != undefined
-            ? immutable_1.List([c.r, c.g, c.b])
-            : immutable_1.List()).toList();
-        return result;
-    })
-        .concat(immutable_1.List([b.r, b.g, b.b]))
-        .toList();
-};
-
-
-/***/ }),
 /* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -51480,6 +51512,110 @@ const utils_1 = __webpack_require__(1);
 exports.characterMapStateZero = { position: utils_1.pointZero,
     enabled: true
 };
+
+
+/***/ }),
+/* 15 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const immutable_1 = __webpack_require__(2);
+const screen_1 = __webpack_require__(0);
+const tone_1 = __webpack_require__(16);
+const palette_1 = __webpack_require__(3);
+exports.characterDimensions = { w: screen_1.frustumSize,
+    h: screen_1.frustumSize
+};
+exports.characterPosition = { x: 0,
+    y: 0
+};
+const makeCharacter = (size) => ({ map: tone_1.toneMapZero(size),
+    size: size,
+    data: new ImageData(size, size)
+});
+exports.characterStateZero = { character: makeCharacter(128)
+};
+exports.characterData = () => {
+    return immutable_1.Range(0, Math.pow(128, 2)).flatMap((_, i) => {
+        if (i == undefined)
+            return immutable_1.List();
+        const p = palette_1.fullPalette.get(Math.floor(Math.random() * 4));
+        return immutable_1.List([p.r, p.g, p.b]);
+    }).toList();
+};
+
+
+/***/ }),
+/* 16 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const immutable_1 = __webpack_require__(2);
+const utils_1 = __webpack_require__(1);
+exports.toneMapZero = (size) => ({ tones: immutable_1.Range(0, Math.pow(128, 2)).map(x => Math.floor(Math.random() * 4)).toList(),
+    size: size,
+    dirty: true
+});
+exports.getTone = (x, y) => (m) => {
+    const tone = m.tones.get(x + y * m.size);
+    return tone != undefined
+        ? utils_1.makeOpt(tone)
+        : utils_1.emptyOpt();
+};
+exports.setTone = (x, y) => (m) => (t) => {
+    const location = x + y * m.size;
+    return m.tones.count() > location
+        ? Object.assign({}, m, { tones: m.tones.set(location, t) }) : m;
+};
+exports.toneMapToData = (p) => (t) => immutable_1.List(t.flatMap(i => i != undefined
+    ? p.skip(i * 4).take(4)
+    : [255, 0, 0, 0]));
+
+
+/***/ }),
+/* 17 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.characterVert = `
+varying vec2 uvPosition;
+
+void main()
+{
+  uvPosition = uv;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}
+`;
+exports.characterFrag = `
+uniform sampler2D texture;
+uniform vec2 mousePosition;
+
+varying vec2 uvPosition;
+
+void main()
+{
+  float hPart  = 1.0 / 128.0;
+  float left   = floor(mousePosition.x / hPart) * hPart;
+  float right  = left + hPart;
+
+  float vPart  = 1.0 / 128.0;
+  float bottom = ceil(mousePosition.y / vPart) * vPart;
+  float top    = bottom - vPart;
+
+  gl_FragColor = uvPosition.x >= left
+              && uvPosition.x <  right
+              && uvPosition.y >= top
+              && uvPosition.y <  bottom
+    ? texture2D(texture, uvPosition)
+    : texture2D(texture, uvPosition); //vec4(texture2D(texture, uvPosition).xyz * 0.2, 1.0);
+}
+`;
 
 
 /***/ })

@@ -19,21 +19,29 @@ import
   } from "three"
 
 import
+  { Point
+  , Dimensions
+  } from "../utils/utils"
+
+import
   { frustumSize
   , aspectRatio
   } from "../screen"
 
-// import 
-//   { makeSurface
-//   } from "./mesh"
-
-// import
-//   { makeCharacterMesh
-//   } from "./character"
-
 import
   { makeFullPaletteMesh
   , makeSamplesMesh
+  , makeCharacterMesh
+  } from "./mesh"
+
+import
+  { PaletteState
+  , palettePosition
+  , paletteDimensions
+  } from "../palette"
+
+import
+  { PaletteUniforms
   } from "./mesh"
 
 export type ThreeState =
@@ -52,7 +60,7 @@ export const threeStateZero: () => ThreeState = () => {
   const meshes = Map<string, Mesh>(
     [ [ "palette",   makeFullPaletteMesh() ]
     , [ "samples",   makeSamplesMesh()     ]
-    // , [ "character", makeCharacterMesh()   ]
+    , [ "character", makeCharacterMesh()   ]
     ]
   )
   meshes.valueSeq().forEach(x => x != undefined ? scene.add(x) : {})
@@ -99,3 +107,18 @@ const makeCamera: () => OrthographicCamera = () => {
 
   return camera
 }
+
+export const updateThreePalette: (s: ThreeState, pa: PaletteState, mousePosition: Point) => void =
+  (s: ThreeState, pa: PaletteState, mousePosition: Point) => {
+    const p: Mesh = s.meshes.get("palette")
+
+    const pos:  Point =
+      { x: -((p.position.x - paletteDimensions.w / 2 - mousePosition.x) / paletteDimensions.w)
+      , y: -((p.position.y - paletteDimensions.h / 2 + mousePosition.y) / paletteDimensions.h)
+      }
+
+    const ps: ShaderMaterial  = p.material  as ShaderMaterial
+    const u:  PaletteUniforms = ps.uniforms as PaletteUniforms
+    
+    u.mousePosition.value = pos
+  }

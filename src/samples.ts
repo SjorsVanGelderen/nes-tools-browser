@@ -35,14 +35,14 @@ export const samplesStateZero: SamplesState =
   , background: 0
   }
 
-export const samplesPosition: Point =
-  { x: 0 //frustumSize / 2 + frustumSize / 8
-  , y: 0
+export const samplesDimensions: Dimensions =
+  { w: frustumSize / 16
+  , h: frustumSize / 16 * 10
   }
 
-export const samplesDimensions: Dimensions =
-  { w: frustumSize / 16 * 10
-  , h: frustumSize / 16
+export const samplesPosition: Point =
+  { x: -frustumSize * aspectRatio / 2 + samplesDimensions.w / 2
+  , y: 0
   }
 
 export const samplesData: () => List<number> = () => {

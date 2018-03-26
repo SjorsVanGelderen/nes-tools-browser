@@ -16,11 +16,11 @@ varying vec2 uvPosition;
 
 void main()
 {
-  float hPart  = 1.0 / 4.0;
+  float hPart  = 1.0 / 16.0;
   float left   = floor(mousePosition.x / hPart) * hPart;
   float right  = left + hPart;
 
-  float vPart  = 1.0 / 16.0;
+  float vPart  = 1.0 / 4.0;
   float bottom = ceil(mousePosition.y / vPart) * vPart;
   float top    = bottom - vPart;
 

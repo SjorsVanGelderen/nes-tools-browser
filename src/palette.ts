@@ -102,7 +102,6 @@ export const fullPalette: Palette = List<PaletteColor>(
 
 export type PaletteState =
   { position:   Point
-  // , dimensions: Dimensions
   , background: number
   }
 
@@ -112,13 +111,12 @@ export const paletteDimensions: Dimensions =
   }
 
 export const palettePosition: Point =
-  { x: frustumSize / 2 //- paletteDimensions.w
+  { x: (frustumSize * aspectRatio) / 2 - paletteDimensions.w / 2
   , y: 0
   }
 
 export const paletteStateZero: PaletteState = 
   { position:   palettePosition
-  // , dimensions: paletteDimensions
   , background: 64
   }
 

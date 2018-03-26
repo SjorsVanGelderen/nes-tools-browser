@@ -4,13 +4,14 @@ import
   } from "immutable"
 
 import
+  { Point
+  , Dimensions
+  } from "./utils/utils"
+
+import
   { frustumSize
   , aspectRatio
   } from "./screen"
-
-// import
-//   { makeSurface
-//   } from "./mesh"
 
 import
   { ToneMap
@@ -20,6 +21,8 @@ import
 
 import
   { Palette
+  , PaletteColor
+  , fullPalette
   } from "./palette"
 
 export type CharacterState =
@@ -30,6 +33,16 @@ export type Character =
   { map:  ToneMap
   , size: number
   , data: ImageData
+  }
+
+export const characterDimensions: Dimensions =
+  { w: frustumSize
+  , h: frustumSize
+  }
+
+export const characterPosition: Point =
+  { x: 0
+  , y: 0
   }
 
 const makeCharacter: (size: number) => Character =
@@ -44,21 +57,12 @@ export const characterStateZero: CharacterState =
   { character: makeCharacter(128)
   }
 
-// export const makeCharacterMesh: () => Mesh = () => {
-//   const characterSize: number = 16
-//   const characterData: List<number> = Range(0, characterSize ** 2 * 3).map(x => 255).toList()
-  
-//   const character: Mesh = makeSurface
-//     (new Vector2(frustumSize * aspectRatio / - 2, frustumSize * aspectRatio / - 2))
-//     (new Vector2(characterSize, characterSize))
-//     (characterData)
-  
-//   character.position.set(-300, 0, 0)
-//   return character
-// }
+export const characterData: () => List<number> = () => {
+  return Range(0, 128 ** 2).flatMap((_, i) => {
+      if(i == undefined) return List<number>()
 
-// export const characterToSurface: (p: Palette) => (c: Character) => Uint8ClampedArray =
-//   (p: Palette) => (c: Character) => {
-//     const data: Uint8ClampedArray = toneMapToData(p)(c.map.tones).toArray()
-//     return data
-//   }
+      const p: PaletteColor = fullPalette.get(Math.floor(Math.random() * 4))
+      return List([ p.r, p.g, p.b ])
+    }
+  ).toList()
+}

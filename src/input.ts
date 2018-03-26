@@ -32,12 +32,22 @@ export const inputStateZero: () => InputState = () => (
 
 export const click: (p: Option<Point>) => (i: InputState) => InputState =
   (p: Option<Point>) => (i: InputState) => (
-    { ...i, click: p }
+    { ...i
+    , mouse:
+      { ...i.mouse
+      , click: p
+      }
+    }
   )
 
 export const move: (p: Point) => (i: InputState) => InputState =
   (p: Point) => (i: InputState) => (
-    { ...i, position: p }
+    { ...i
+    , mouse:
+      { ...i.mouse
+      , position: p
+      }
+    }
   )
 
 export let mousePosition: Point = { x: 0, y: 0 }
@@ -63,4 +73,8 @@ export const onClick: (e: MouseEvent) => void = (e: MouseEvent) => {
   if(e != undefined) {
     mouseClick = makeOpt(convertPosition({ x: e.x, y: e.y }))
   }
+}
+
+export const flush: () => void = () => {
+  mouseClick = emptyOpt<Point>()
 }
