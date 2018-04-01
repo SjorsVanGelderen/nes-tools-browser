@@ -5,7 +5,6 @@ import
 
 import
   { Point
-  , pointZero
   , Dimensions
   } from "./utils/utils"
 
@@ -13,6 +12,10 @@ import
   { frustumSize
   , aspectRatio
   } from "./screen"
+
+import
+  { State
+  } from "./state"
 
 export type PaletteColor = { r: number, g: number, b: number }
 export type Palette      = List<PaletteColor>
@@ -126,5 +129,8 @@ export const paletteData: List<number> =
 
     const p: PaletteColor = fullPalette.get(i)
     return List([ p.r, p.g, p.b ])
-  }
-).toList()
+  }).toList()
+
+export const updatePalette: (s: State) => State = (s: State) => {
+  return s
+}

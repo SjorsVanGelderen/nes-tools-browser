@@ -10,48 +10,54 @@ import
   , screenHeight
   } from "./screen"
 
+import
+  { State
+  } from "./state"
+
+// Buffers for side-effects
+export let mousePosition: Point          = { x: 0, y: 0 }
+export let mouseClick:    Option<Point>  = emptyOpt()
+export let keyPress:      Option<number> = emptyOpt()
+
 type MouseState =
   { position: Point
   , click:    Option<Point>
   }
 
-export const mouseStateZero: () => MouseState = () => (
+type KeyboardState =
+  { press: Option<number>
+  }
+
+export type InputState =
+  { mouse:    MouseState
+  , keyboard: KeyboardState
+  }
+
+const mouseStateZero: () => MouseState = () => (
   { position: { x: 0, y: 0 }
   , click:    emptyOpt()
   }
 )
 
-export type InputState =
-  { mouse: MouseState
-  }
-
-export const inputStateZero: () => InputState = () => (
-  { mouse: mouseStateZero()
+const keyboardStateZero: () => KeyboardState = () => (
+  { press: emptyOpt()
   }
 )
 
-export const click: (p: Option<Point>) => (i: InputState) => InputState =
-  (p: Option<Point>) => (i: InputState) => (
-    { ...i
-    , mouse:
-      { ...i.mouse
-      , click: p
-      }
-    }
-  )
+export const inputStateZero: () => InputState = () => (
+  { mouse:    mouseStateZero()
+  , keyboard: keyboardStateZero()
+  }
+)
 
-export const move: (p: Point) => (i: InputState) => InputState =
-  (p: Point) => (i: InputState) => (
-    { ...i
-    , mouse:
-      { ...i.mouse
-      , position: p
-      }
-    }
-  )
+export const click: (p: Option<Point>) => (m: MouseState) => MouseState =
+  (p: Option<Point>) => (m: MouseState) => ({ ...m, click: p })
 
-export let mousePosition: Point = { x: 0, y: 0 }
-export let mouseClick:    Option<Point>
+export const move: (p: Point) => (m: MouseState) => MouseState =
+  (p: Point) => (m: MouseState) => ({ ...m, position: p})
+
+export const press: (c: number) => (k: KeyboardState) => KeyboardState =
+  (c: number) => (k: KeyboardState) => ({ ...k, press: makeOpt(c) })
 
 export const convertPosition: (p: Point) => Point = (p: Point) => {
   const widthRatio  = window.innerWidth  / p.x
@@ -75,6 +81,35 @@ export const onClick: (e: MouseEvent) => void = (e: MouseEvent) => {
   }
 }
 
+export const onScroll: (e: MouseEvent) => void = (e: MouseEvent) => {
+  
+}
+
+export const onKeyPress: (e: KeyboardEvent) => void = (e: KeyboardEvent) => {
+  if(e != undefined) {
+    keyPress = makeOpt(e.keyCode)
+  }
+}
+
 export const flush: () => void = () => {
   mouseClick = emptyOpt<Point>()
+  keyPress   = emptyOpt()
+}
+
+const updateKeyboard: (s: KeyboardState) => KeyboardState = (s: KeyboardState) => {
+  return (
+    { ...s
+    , press: keyPress
+    }
+  )
+}
+
+export const updateInput: (s: State) => State = (s: State) => {
+  const i: InputState = s.input
+
+  return (
+    { ...s
+    , keyboard: updateKeyboard(i.keyboard)
+    }
+  )
 }

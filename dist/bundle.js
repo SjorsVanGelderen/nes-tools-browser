@@ -60,40 +60,11 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 7);
+/******/ 	return __webpack_require__(__webpack_require__.s = 10);
 /******/ })
 /************************************************************************/
 /******/ ([
 /* 0 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.frustumSize = 1000;
-exports.aspectRatio = window.innerWidth / window.innerHeight;
-exports.screenWidth = exports.frustumSize * exports.aspectRatio;
-exports.screenHeight = exports.frustumSize;
-
-
-/***/ }),
-/* 1 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.emptyOpt = () => ({ kind: "none" });
-exports.makeOpt = (x) => ({ kind: "some", value: x });
-exports.pointZero = { x: 0, y: 0 };
-exports.compose = (f, g) => (x) => g(f(x));
-exports.run = (f) => (g) => g == "with"
-    ? f
-    : exports.run(exports.compose(f, g));
-
-
-/***/ }),
-/* 2 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -5075,14 +5046,14 @@ exports.run = (f) => (g) => g == "with"
 }));
 
 /***/ }),
-/* 3 */
+/* 1 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const immutable_1 = __webpack_require__(2);
-const screen_1 = __webpack_require__(0);
+const immutable_1 = __webpack_require__(0);
+const screen_1 = __webpack_require__(2);
 exports.fullPalette = immutable_1.List([{ r: 101, g: 101, b: 101 },
     { r: 176, g: 176, b: 176 },
     { r: 254, g: 254, b: 255 },
@@ -5163,25 +5134,48 @@ exports.paletteData = immutable_1.Range(0, 64).flatMap((_, i) => {
     const p = exports.fullPalette.get(i);
     return immutable_1.List([p.r, p.g, p.b]);
 }).toList();
+exports.updatePalette = (s) => {
+    return s;
+};
 
 
 /***/ }),
-/* 4 */
+/* 2 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const utils_1 = __webpack_require__(1);
-const screen_1 = __webpack_require__(0);
-exports.mouseStateZero = () => ({ position: { x: 0, y: 0 },
+exports.frustumSize = 1000;
+exports.aspectRatio = window.innerWidth / window.innerHeight;
+exports.screenWidth = exports.frustumSize * exports.aspectRatio;
+exports.screenHeight = exports.frustumSize;
+
+
+/***/ }),
+/* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const utils_1 = __webpack_require__(4);
+const screen_1 = __webpack_require__(2);
+// Buffers for side-effects
+exports.mousePosition = { x: 0, y: 0 };
+exports.mouseClick = utils_1.emptyOpt();
+exports.keyPress = utils_1.emptyOpt();
+const mouseStateZero = () => ({ position: { x: 0, y: 0 },
     click: utils_1.emptyOpt()
 });
-exports.inputStateZero = () => ({ mouse: exports.mouseStateZero()
+const keyboardStateZero = () => ({ press: utils_1.emptyOpt()
 });
-exports.click = (p) => (i) => (Object.assign({}, i, { mouse: Object.assign({}, i.mouse, { click: p }) }));
-exports.move = (p) => (i) => (Object.assign({}, i, { mouse: Object.assign({}, i.mouse, { position: p }) }));
-exports.mousePosition = { x: 0, y: 0 };
+exports.inputStateZero = () => ({ mouse: mouseStateZero(),
+    keyboard: keyboardStateZero()
+});
+exports.click = (p) => (m) => (Object.assign({}, m, { click: p }));
+exports.move = (p) => (m) => (Object.assign({}, m, { position: p }));
+exports.press = (c) => (k) => (Object.assign({}, k, { press: utils_1.makeOpt(c) }));
 exports.convertPosition = (p) => {
     const widthRatio = window.innerWidth / p.x;
     const heightRatio = window.innerHeight / p.y;
@@ -5199,13 +5193,156 @@ exports.onClick = (e) => {
         exports.mouseClick = utils_1.makeOpt(exports.convertPosition({ x: e.x, y: e.y }));
     }
 };
+exports.onScroll = (e) => {
+};
+exports.onKeyPress = (e) => {
+    if (e != undefined) {
+        exports.keyPress = utils_1.makeOpt(e.keyCode);
+    }
+};
 exports.flush = () => {
     exports.mouseClick = utils_1.emptyOpt();
+    exports.keyPress = utils_1.emptyOpt();
+};
+const updateKeyboard = (s) => {
+    return (Object.assign({}, s, { press: exports.keyPress }));
+};
+exports.updateInput = (s) => {
+    const i = s.input;
+    return (Object.assign({}, s, { keyboard: updateKeyboard(i.keyboard) }));
 };
 
 
 /***/ }),
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.emptyOpt = () => ({ kind: "none" });
+exports.makeOpt = (x) => ({ kind: "some", value: x });
+exports.pointZero = { x: 0, y: 0 };
+exports.compose = (f, g) => (x) => g(f(x));
+exports.run = (f) => (g) => g == "with"
+    ? f
+    : exports.run(exports.compose(f, g));
+
+
+/***/ }),
 /* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const immutable_1 = __webpack_require__(0);
+const screen_1 = __webpack_require__(2);
+const palette_1 = __webpack_require__(1);
+exports.samplesStateZero = { samples: immutable_1.List([immutable_1.List([0, 1, 2]),
+        immutable_1.List([3, 4, 5]),
+        immutable_1.List([6, 7, 8]),
+        immutable_1.List([9, 10, 11])
+    ]),
+    background: 0
+};
+exports.samplesDimensions = { w: screen_1.frustumSize / 16,
+    h: screen_1.frustumSize / 16 * 10
+};
+exports.samplesPosition = { x: -screen_1.frustumSize * screen_1.aspectRatio / 2 + exports.samplesDimensions.w / 2,
+    y: 0
+};
+exports.samplesData = () => {
+    const b = palette_1.fullPalette.get(exports.samplesStateZero.background);
+    return exports.samplesStateZero.samples.flatMap(x => {
+        if (x == undefined)
+            return immutable_1.List();
+        const p = immutable_1.List([palette_1.fullPalette.get(x.get(0)),
+            palette_1.fullPalette.get(x.get(1)),
+            palette_1.fullPalette.get(x.get(2))
+        ]);
+        const result = p.flatMap(c => c == undefined
+            ? immutable_1.List()
+            : immutable_1.List([c.r, c.g, c.b])).toList();
+        return result;
+    })
+        .concat(immutable_1.List([b.r, b.g, b.b]))
+        .toList();
+};
+exports.updateSamples = (s) => {
+    return s;
+};
+
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const ColorSpec = __webpack_require__(12);
+const immutable_1 = __webpack_require__(0);
+const three_1 = __webpack_require__(7);
+const screen_1 = __webpack_require__(2);
+const input_1 = __webpack_require__(3);
+const mesh_1 = __webpack_require__(13);
+const palette_1 = __webpack_require__(1);
+exports.threeStateZero = () => {
+    const scene = makeScene();
+    const camera = makeCamera();
+    const renderer = makeRenderer();
+    const meshes = immutable_1.Map([["palette", mesh_1.makeFullPaletteMesh()],
+        ["samples", mesh_1.makeSamplesMesh()],
+        ["character", mesh_1.makeCharacterMesh()]
+    ]);
+    meshes.valueSeq().forEach(x => x != undefined ? scene.add(x) : {});
+    const shaders = immutable_1.Map();
+    return ({ scene: scene,
+        camera: camera,
+        renderer: renderer,
+        meshes: meshes,
+        shaders: shaders
+    });
+};
+const makeScene = () => {
+    const scene = new three_1.Scene();
+    scene.background = new three_1.Color(ColorSpec.background);
+    return scene;
+};
+const makeRenderer = () => {
+    const renderer = new three_1.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    const element = document.body.appendChild(renderer.domElement);
+    element.addEventListener("mousemove", input_1.onMove, false);
+    element.addEventListener("mousedown", input_1.onClick, false);
+    // element.addEventListener("scroll",    onScroll, false)
+    // Adding to element doesn't seem to work
+    window.addEventListener("keypress", input_1.onKeyPress, false);
+    return renderer;
+};
+const makeCamera = () => {
+    const camera = new three_1.OrthographicCamera(screen_1.frustumSize * screen_1.aspectRatio / -2, screen_1.frustumSize * screen_1.aspectRatio / 2, screen_1.frustumSize / 2, screen_1.frustumSize / -2, 1, screen_1.frustumSize * 2);
+    camera.position.z = 100;
+    camera.lookAt(new three_1.Vector3(0, 0, 0));
+    return camera;
+};
+exports.updateThreePalette = (s, pa, mousePosition) => {
+    const p = s.meshes.get("palette");
+    const pos = { x: -((p.position.x - palette_1.paletteDimensions.w / 2 - mousePosition.x) / palette_1.paletteDimensions.w),
+        y: -((p.position.y - palette_1.paletteDimensions.h / 2 + mousePosition.y) / palette_1.paletteDimensions.h)
+    };
+    const ps = p.material;
+    const u = ps.uniforms;
+    u.mousePosition.value = pos;
+};
+exports.updateThree = (s) => {
+    return s;
+};
+
+
+/***/ }),
+/* 7 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -51147,101 +51284,36 @@ function LensFlare() {
 
 
 /***/ }),
-/* 6 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-const immutable_1 = __webpack_require__(2);
-const screen_1 = __webpack_require__(0);
-const palette_1 = __webpack_require__(3);
-exports.samplesStateZero = { samples: immutable_1.List([immutable_1.List([0, 1, 2]),
-        immutable_1.List([3, 4, 5]),
-        immutable_1.List([6, 7, 8]),
-        immutable_1.List([9, 10, 11])
-    ]),
-    background: 0
-};
-exports.samplesDimensions = { w: screen_1.frustumSize / 16,
-    h: screen_1.frustumSize / 16 * 10
-};
-exports.samplesPosition = { x: -screen_1.frustumSize * screen_1.aspectRatio / 2 + exports.samplesDimensions.w / 2,
-    y: 0
-};
-exports.samplesData = () => {
-    const b = palette_1.fullPalette.get(exports.samplesStateZero.background);
-    return exports.samplesStateZero.samples.flatMap(x => {
-        if (x == undefined)
-            return immutable_1.List();
-        const p = immutable_1.List([palette_1.fullPalette.get(x.get(0)),
-            palette_1.fullPalette.get(x.get(1)),
-            palette_1.fullPalette.get(x.get(2))
-        ]);
-        const result = p.flatMap(c => c != undefined
-            ? immutable_1.List([c.r, c.g, c.b])
-            : immutable_1.List()).toList();
-        return result;
-    })
-        .concat(immutable_1.List([b.r, b.g, b.b]))
-        .toList();
-};
-
-
-/***/ }),
-/* 7 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-const utils_1 = __webpack_require__(1);
-const input_1 = __webpack_require__(4);
-const three_1 = __webpack_require__(9);
-const state_1 = __webpack_require__(8);
-const update = (state) => {
-    const s = (Object.assign({}, state, { input: utils_1.run(input_1.click(input_1.mouseClick))(input_1.move(input_1.mousePosition))("with")(state.input) }));
-    input_1.flush();
-    const t = s.three;
-    three_1.updateThreePalette(t, s.palette, s.input.mouse.position);
-    t.renderer.render(t.scene, t.camera);
-    window.requestAnimationFrame(() => update(s));
-};
-const start = () => {
-    const state = state_1.stateZero();
-    const renderer = state.three.renderer.domElement;
-    renderer.addEventListener("mousemove", input_1.onMove, false);
-    renderer.addEventListener("mousedown", input_1.onClick, false);
-    window.requestAnimationFrame(() => update(state));
-};
-start();
-
-
-/***/ }),
 /* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const three_1 = __webpack_require__(9);
-const input_1 = __webpack_require__(4);
-// import
-//   { CharacterState
-//   , characterStateZero
-//   } from "./character"
-const character_map_1 = __webpack_require__(14);
-const palette_1 = __webpack_require__(3);
-const samples_1 = __webpack_require__(6);
-exports.stateZero = () => {
-    return ({ three: three_1.threeStateZero(),
-        input: input_1.inputStateZero()
-        // , character:    characterStateZero
-        ,
-        characterMap: character_map_1.characterMapStateZero,
-        palette: palette_1.paletteStateZero,
-        samples: samples_1.samplesStateZero
-    });
+const immutable_1 = __webpack_require__(0);
+const screen_1 = __webpack_require__(2);
+const tone_1 = __webpack_require__(17);
+const palette_1 = __webpack_require__(1);
+exports.characterDimensions = { w: screen_1.frustumSize * 0.8,
+    h: screen_1.frustumSize * 0.8
+};
+exports.characterPosition = { x: 0,
+    y: 0
+};
+const makeCharacter = (size) => ({ map: tone_1.toneMapZero(size),
+    size: size,
+    data: new ImageData(size, size)
+});
+exports.characterStateZero = { character: makeCharacter(128)
+};
+exports.characterData = () => immutable_1.Range(0, Math.pow(128, 2)).flatMap((_, i) => {
+    if (i == undefined)
+        return immutable_1.List();
+    const p = palette_1.fullPalette.get(Math.floor(Math.random() * 4));
+    return immutable_1.List([p.r, p.g, p.b]);
+}).toList();
+exports.updateCharacter = (s) => {
+    return s;
 };
 
 
@@ -51252,59 +51324,77 @@ exports.stateZero = () => {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const ColorSpec = __webpack_require__(10);
-const immutable_1 = __webpack_require__(2);
-const three_1 = __webpack_require__(5);
-const screen_1 = __webpack_require__(0);
-const mesh_1 = __webpack_require__(11);
-const palette_1 = __webpack_require__(3);
-exports.threeStateZero = () => {
-    const scene = makeScene();
-    const camera = makeCamera();
-    const renderer = makeRenderer();
-    const meshes = immutable_1.Map([["palette", mesh_1.makeFullPaletteMesh()],
-        ["samples", mesh_1.makeSamplesMesh()],
-        ["character", mesh_1.makeCharacterMesh()]
-    ]);
-    meshes.valueSeq().forEach(x => x != undefined ? scene.add(x) : {});
-    const shaders = immutable_1.Map();
-    return ({ scene: scene,
-        camera: camera,
-        renderer: renderer,
-        meshes: meshes,
-        shaders: shaders
-    });
+const immutable_1 = __webpack_require__(0);
+exports.mailboxZero = { paletteMail: immutable_1.List(),
+    samplesMail: immutable_1.List(),
+    characterMail: immutable_1.List(),
+    inputMail: immutable_1.List(),
+    threeMail: immutable_1.List()
 };
-const makeScene = () => {
-    const scene = new three_1.Scene();
-    scene.background = new three_1.Color(ColorSpec.background);
-    return scene;
-};
-const makeRenderer = () => {
-    const renderer = new three_1.WebGLRenderer();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
-    return renderer;
-};
-const makeCamera = () => {
-    const camera = new three_1.OrthographicCamera(screen_1.frustumSize * screen_1.aspectRatio / -2, screen_1.frustumSize * screen_1.aspectRatio / 2, screen_1.frustumSize / 2, screen_1.frustumSize / -2, 1, screen_1.frustumSize * 2);
-    camera.position.z = 100;
-    camera.lookAt(new three_1.Vector3(0, 0, 0));
-    return camera;
-};
-exports.updateThreePalette = (s, pa, mousePosition) => {
-    const p = s.meshes.get("palette");
-    const pos = { x: -((p.position.x - palette_1.paletteDimensions.w / 2 - mousePosition.x) / palette_1.paletteDimensions.w),
-        y: -((p.position.y - palette_1.paletteDimensions.h / 2 + mousePosition.y) / palette_1.paletteDimensions.h)
-    };
-    const ps = p.material;
-    const u = ps.uniforms;
-    u.mousePosition.value = pos;
+exports.updateMailbox = (s) => {
+    return s;
 };
 
 
 /***/ }),
 /* 10 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const utils_1 = __webpack_require__(4);
+const input_1 = __webpack_require__(3);
+const state_1 = __webpack_require__(11);
+const three_1 = __webpack_require__(6);
+const input_2 = __webpack_require__(3);
+const character_1 = __webpack_require__(8);
+const palette_1 = __webpack_require__(1);
+const samples_1 = __webpack_require__(5);
+const mail_1 = __webpack_require__(9);
+const updateApp = (s) => {
+    return s;
+};
+const update = (s) => {
+    const newState = utils_1.run(updateApp)(input_2.updateInput)(character_1.updateCharacter)(palette_1.updatePalette)(samples_1.updateSamples)(three_1.updateThree)(mail_1.updateMailbox)("with")(s);
+    input_1.flush(); // Flush input buffers
+    const t = s.three;
+    t.renderer.render(t.scene, t.camera);
+    window.requestAnimationFrame(() => update(s));
+};
+const start = () => {
+    const state = state_1.stateZero();
+    window.requestAnimationFrame(() => update(state));
+};
+start();
+
+
+/***/ }),
+/* 11 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const three_1 = __webpack_require__(6);
+const input_1 = __webpack_require__(3);
+const character_1 = __webpack_require__(8);
+const palette_1 = __webpack_require__(1);
+const samples_1 = __webpack_require__(5);
+const mail_1 = __webpack_require__(9);
+exports.stateZero = () => {
+    return ({ three: three_1.threeStateZero(),
+        input: input_1.inputStateZero(),
+        character: character_1.characterStateZero,
+        palette: palette_1.paletteStateZero,
+        samples: samples_1.samplesStateZero,
+        mailbox: mail_1.mailboxZero
+    });
+};
+
+
+/***/ }),
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -51322,19 +51412,19 @@ exports.selection = circleInTheSand;
 
 
 /***/ }),
-/* 11 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const three_1 = __webpack_require__(5);
-const palette_1 = __webpack_require__(12);
-const samples_1 = __webpack_require__(13);
-const character_1 = __webpack_require__(17);
-const palette_2 = __webpack_require__(3);
-const samples_2 = __webpack_require__(6);
-const character_2 = __webpack_require__(15);
+const three_1 = __webpack_require__(7);
+const palette_1 = __webpack_require__(14);
+const samples_1 = __webpack_require__(15);
+const character_1 = __webpack_require__(16);
+const palette_2 = __webpack_require__(1);
+const samples_2 = __webpack_require__(5);
+const character_2 = __webpack_require__(8);
 exports.makeSurfaceGeometry = (dimensions) => {
     const geometry = new three_1.PlaneGeometry(dimensions.x, dimensions.y, 32);
     return geometry;
@@ -51418,7 +51508,7 @@ exports.makeCharacterMesh = () => {
 
 
 /***/ }),
-/* 12 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -51460,7 +51550,7 @@ void main()
 
 
 /***/ }),
-/* 13 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -51502,82 +51592,7 @@ void main()
 
 
 /***/ }),
-/* 14 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-const utils_1 = __webpack_require__(1);
-exports.characterMapStateZero = { position: utils_1.pointZero,
-    enabled: true
-};
-
-
-/***/ }),
-/* 15 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-const immutable_1 = __webpack_require__(2);
-const screen_1 = __webpack_require__(0);
-const tone_1 = __webpack_require__(16);
-const palette_1 = __webpack_require__(3);
-exports.characterDimensions = { w: screen_1.frustumSize,
-    h: screen_1.frustumSize
-};
-exports.characterPosition = { x: 0,
-    y: 0
-};
-const makeCharacter = (size) => ({ map: tone_1.toneMapZero(size),
-    size: size,
-    data: new ImageData(size, size)
-});
-exports.characterStateZero = { character: makeCharacter(128)
-};
-exports.characterData = () => {
-    return immutable_1.Range(0, Math.pow(128, 2)).flatMap((_, i) => {
-        if (i == undefined)
-            return immutable_1.List();
-        const p = palette_1.fullPalette.get(Math.floor(Math.random() * 4));
-        return immutable_1.List([p.r, p.g, p.b]);
-    }).toList();
-};
-
-
-/***/ }),
 /* 16 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-const immutable_1 = __webpack_require__(2);
-const utils_1 = __webpack_require__(1);
-exports.toneMapZero = (size) => ({ tones: immutable_1.Range(0, Math.pow(128, 2)).map(x => Math.floor(Math.random() * 4)).toList(),
-    size: size,
-    dirty: true
-});
-exports.getTone = (x, y) => (m) => {
-    const tone = m.tones.get(x + y * m.size);
-    return tone != undefined
-        ? utils_1.makeOpt(tone)
-        : utils_1.emptyOpt();
-};
-exports.setTone = (x, y) => (m) => (t) => {
-    const location = x + y * m.size;
-    return m.tones.count() > location
-        ? Object.assign({}, m, { tones: m.tones.set(location, t) }) : m;
-};
-exports.toneMapToData = (p) => (t) => immutable_1.List(t.flatMap(i => i != undefined
-    ? p.skip(i * 4).take(4)
-    : [255, 0, 0, 0]));
-
-
-/***/ }),
-/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -51616,6 +51631,35 @@ void main()
     : texture2D(texture, uvPosition); //vec4(texture2D(texture, uvPosition).xyz * 0.2, 1.0);
 }
 `;
+
+
+/***/ }),
+/* 17 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const immutable_1 = __webpack_require__(0);
+const utils_1 = __webpack_require__(4);
+exports.toneMapZero = (size) => ({ tones: immutable_1.Range(0, Math.pow(128, 2)).map(x => Math.floor(Math.random() * 4)).toList(),
+    size: size,
+    dirty: true
+});
+exports.getTone = (x, y) => (m) => {
+    const tone = m.tones.get(x + y * m.size);
+    return tone != undefined
+        ? utils_1.makeOpt(tone)
+        : utils_1.emptyOpt();
+};
+exports.setTone = (x, y) => (m) => (t) => {
+    const location = x + y * m.size;
+    return m.tones.count() > location
+        ? Object.assign({}, m, { tones: m.tones.set(location, t) }) : m;
+};
+exports.toneMapToData = (p) => (t) => immutable_1.List(t.flatMap(i => i != undefined
+    ? p.skip(i * 4).take(4)
+    : [255, 0, 0, 0]));
 
 
 /***/ })

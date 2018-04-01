@@ -29,6 +29,13 @@ import
   } from "../screen"
 
 import
+  { onClick
+  , onMove
+  , onScroll
+  , onKeyPress
+  } from "../input"
+
+import
   { makeFullPaletteMesh
   , makeSamplesMesh
   , makeCharacterMesh
@@ -43,6 +50,10 @@ import
 import
   { PaletteUniforms
   } from "./mesh"
+
+import
+  { State
+  } from "../state"
 
 export type ThreeState =
   { scene:     Scene
@@ -87,7 +98,14 @@ const makeRenderer: () => WebGLRenderer = () => {
   const renderer = new WebGLRenderer()
   renderer.setSize(window.innerWidth, window.innerHeight)
 
-  document.body.appendChild(renderer.domElement)
+  const element: HTMLCanvasElement = document.body.appendChild(renderer.domElement)
+
+  element.addEventListener("mousemove", onMove,     false)
+  element.addEventListener("mousedown", onClick,    false)
+  // element.addEventListener("scroll",    onScroll, false)
+
+  // Adding to element doesn't seem to work
+  window.addEventListener("keypress",  onKeyPress, false)
 
   return renderer
 }
@@ -122,3 +140,7 @@ export const updateThreePalette: (s: ThreeState, pa: PaletteState, mousePosition
     
     u.mousePosition.value = pos
   }
+
+export const updateThree: (s: State) => State = (s: State) => {
+  return s
+}

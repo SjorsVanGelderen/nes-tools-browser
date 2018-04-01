@@ -25,6 +25,10 @@ import
   , fullPalette
   } from "./palette"
 
+import
+  { State
+  } from "./state"
+
 export type CharacterState =
   { character: Character
   }
@@ -36,8 +40,8 @@ export type Character =
   }
 
 export const characterDimensions: Dimensions =
-  { w: frustumSize
-  , h: frustumSize
+  { w: frustumSize * 0.8
+  , h: frustumSize * 0.8
   }
 
 export const characterPosition: Point =
@@ -45,24 +49,27 @@ export const characterPosition: Point =
   , y: 0
   }
 
-const makeCharacter: (size: number) => Character =
-  (size: number) => (
-    { map:  toneMapZero(size)
-    , size: size
-    , data: new ImageData(size, size)
-    }
-  )
+const makeCharacter: (size: number) => Character = (size: number) => (
+  { map:  toneMapZero(size)
+  , size: size
+  , data: new ImageData(size, size)
+  }
+)
 
 export const characterStateZero: CharacterState =
   { character: makeCharacter(128)
   }
 
-export const characterData: () => List<number> = () => {
-  return Range(0, 128 ** 2).flatMap((_, i) => {
+export const characterData: () => List<number> = () =>
+  Range(0, 128 ** 2).flatMap((_, i) => {
       if(i == undefined) return List<number>()
 
       const p: PaletteColor = fullPalette.get(Math.floor(Math.random() * 4))
       return List([ p.r, p.g, p.b ])
     }
   ).toList()
+
+
+export const updateCharacter: (s: State) => State = (s: State) => {
+  return s
 }

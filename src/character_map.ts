@@ -1,14 +1,14 @@
-import
-  { Point
-  , pointZero
-  } from "./utils/utils"
+// import
+//   { Point
+//   , pointZero
+//   } from "./utils/utils"
 
-export type CharacterMapState =
-  { position: Point
-  , enabled:  boolean
-  }
+// export type CharacterMapState =
+//   { position: Point
+//   , enabled:  boolean
+//   }
 
-export const characterMapStateZero: CharacterMapState =
-  { position: pointZero
-  , enabled:  true
-  }
+// export const characterMapStateZero: CharacterMapState =
+//   { position: pointZero
+//   , enabled:  true
+//   }

@@ -1,13 +1,3 @@
-import 
-  { List
-  } from "immutable"
-
-import
-  { Point
-  , Option
-  , emptyOpt
-  } from "./utils/utils"
-
 import
   { ThreeState
   , threeStateZero
@@ -18,15 +8,10 @@ import
   , inputStateZero
   } from "./input"
 
-// import
-//   { CharacterState
-//   , characterStateZero
-//   } from "./character"
-
 import
-  { CharacterMapState
-  , characterMapStateZero
-  } from "./character_map"
+  { CharacterState
+  , characterStateZero
+  } from "./character"
 
 import
   { PaletteState
@@ -38,23 +23,28 @@ import
   , samplesStateZero
   } from "./samples"
 
+import
+  { Mailbox
+  , mailboxZero
+  } from "./mail"
+
 export type State =
-  { three:        ThreeState
-  , input:        InputState
-  // , character:    CharacterState
-  , characterMap: CharacterMapState
-  , palette:      PaletteState
-  , samples:      SamplesState
+  { three:     ThreeState
+  , input:     InputState
+  , character: CharacterState
+  , palette:   PaletteState
+  , samples:   SamplesState
+  , mailbox:   Mailbox
   }
 
 export const stateZero: () => State = () => {
   return (
-    { three:        threeStateZero()
-    , input:        inputStateZero()
-    // , character:    characterStateZero
-    , characterMap: characterMapStateZero
-    , palette:      paletteStateZero
-    , samples:      samplesStateZero
+    { three:     threeStateZero()
+    , input:     inputStateZero()
+    , character: characterStateZero
+    , palette:   paletteStateZero
+    , samples:   samplesStateZero
+    , mailbox:   mailboxZero
     }
   )
 }

@@ -17,6 +17,10 @@ import
   , fullPalette
   } from "./palette"
 
+import
+  { State
+  } from "./state"
+
 export type Sample = List<number>
 
 export type SamplesState =
@@ -59,13 +63,17 @@ export const samplesData: () => List<number> = () => {
     )
 
     const result: List<number> =
-      p.flatMap(c => c != undefined
-        ? List([ c.r, c.g, c.b ])
-        : List<number>()
+      p.flatMap(c => c == undefined
+        ? List<number>()
+        : List([ c.r, c.g, c.b ])
       ).toList()
     
     return result
   })
   .concat(List([ b.r, b.g, b.b ]))
   .toList()
+}
+
+export const updateSamples: (s: State) => State = (s: State) => {
+  return s
 }
