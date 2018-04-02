@@ -42,12 +42,12 @@ const updateApp: (s: State) => State = (s: State) => {
 const update: (s: State) => void = (s: State) => {
   const newState: State =
     run
-      (updateApp)
       (updateInput)
+      (updateApp)
       (updateCharacter)
-      (updatePalette)
-      (updateSamples)
-      (updateThree)
+      // (updatePalette)
+      // (updateSamples)
+      // (updateThree)
       (updateMailbox)
     ("with")
       (s)
@@ -57,7 +57,7 @@ const update: (s: State) => void = (s: State) => {
   const t = s.three
   t.renderer.render(t.scene, t.camera)
 
-  window.requestAnimationFrame(() => update(s))
+  window.requestAnimationFrame(() => update(newState))
 }
 
 const start: () => void = () => {

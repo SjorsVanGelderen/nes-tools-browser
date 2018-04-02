@@ -97,19 +97,15 @@ export const flush: () => void = () => {
 }
 
 const updateKeyboard: (s: KeyboardState) => KeyboardState = (s: KeyboardState) => {
-  return (
-    { ...s
-    , press: keyPress
-    }
-  )
+  const newState: KeyboardState = { ...s, press: keyPress }
+
+  return newState
 }
 
 export const updateInput: (s: State) => State = (s: State) => {
   const i: InputState = s.input
 
-  return (
-    { ...s
-    , keyboard: updateKeyboard(i.keyboard)
-    }
-  )
+  const newState: State = { ...s, input: { ...i, keyboard: updateKeyboard(i.keyboard) } }
+
+  return newState
 }

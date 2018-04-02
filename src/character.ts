@@ -31,6 +31,7 @@ import
 
 export type CharacterState =
   { character: Character
+  , zoom:      number
   }
 
 export type Character = 
@@ -58,6 +59,7 @@ const makeCharacter: (size: number) => Character = (size: number) => (
 
 export const characterStateZero: CharacterState =
   { character: makeCharacter(128)
+  , zoom:      1
   }
 
 export const characterData: () => List<number> = () =>
@@ -69,7 +71,20 @@ export const characterData: () => List<number> = () =>
     }
   ).toList()
 
-
 export const updateCharacter: (s: State) => State = (s: State) => {
-  return s
+  const keyboard = s.input.keyboard
+  const press    = keyboard.press
+  const c        = s.character
+  const m        = s.mailbox
+
+  const newC: CharacterState =
+    { ...c, zoom: press.kind == "some" && press.value == 122 ? c.zoom + 1 : c.zoom }
+
+  const newState: State =
+    { ...s
+    , character: newC
+    , mailbox: { ...m, characterMail: m.characterMail.push({ kind: "Zoom", value: newC.zoom }) }
+    }
+
+  return newState
 }

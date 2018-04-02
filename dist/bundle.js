@@ -5205,11 +5205,13 @@ exports.flush = () => {
     exports.keyPress = utils_1.emptyOpt();
 };
 const updateKeyboard = (s) => {
-    return (Object.assign({}, s, { press: exports.keyPress }));
+    const newState = Object.assign({}, s, { press: exports.keyPress });
+    return newState;
 };
 exports.updateInput = (s) => {
     const i = s.input;
-    return (Object.assign({}, s, { keyboard: updateKeyboard(i.keyboard) }));
+    const newState = Object.assign({}, s, { input: Object.assign({}, i, { keyboard: updateKeyboard(i.keyboard) }) });
+    return newState;
 };
 
 
@@ -5281,9 +5283,50 @@ exports.updateSamples = (s) => {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+const immutable_1 = __webpack_require__(0);
+const screen_1 = __webpack_require__(2);
+const tone_1 = __webpack_require__(17);
+const palette_1 = __webpack_require__(1);
+exports.characterDimensions = { w: screen_1.frustumSize * 0.8,
+    h: screen_1.frustumSize * 0.8
+};
+exports.characterPosition = { x: 0,
+    y: 0
+};
+const makeCharacter = (size) => ({ map: tone_1.toneMapZero(size),
+    size: size,
+    data: new ImageData(size, size)
+});
+exports.characterStateZero = { character: makeCharacter(128),
+    zoom: 1
+};
+exports.characterData = () => immutable_1.Range(0, Math.pow(128, 2)).flatMap((_, i) => {
+    if (i == undefined)
+        return immutable_1.List();
+    const p = palette_1.fullPalette.get(Math.floor(Math.random() * 4));
+    return immutable_1.List([p.r, p.g, p.b]);
+}).toList();
+exports.updateCharacter = (s) => {
+    const keyboard = s.input.keyboard;
+    const press = keyboard.press;
+    const c = s.character;
+    const m = s.mailbox;
+    const newC = Object.assign({}, c, { zoom: press.kind == "some" && press.value == 122 ? c.zoom + 1 : c.zoom });
+    const newState = Object.assign({}, s, { character: newC, mailbox: Object.assign({}, m, { characterMail: m.characterMail.push({ kind: "Zoom", value: newC.zoom }) }) });
+    return newState;
+};
+
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
 const ColorSpec = __webpack_require__(12);
 const immutable_1 = __webpack_require__(0);
-const three_1 = __webpack_require__(7);
+const three_1 = __webpack_require__(8);
 const screen_1 = __webpack_require__(2);
 const input_1 = __webpack_require__(3);
 const mesh_1 = __webpack_require__(13);
@@ -5342,7 +5385,7 @@ exports.updateThree = (s) => {
 
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -51284,40 +51327,6 @@ function LensFlare() {
 
 
 /***/ }),
-/* 8 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-const immutable_1 = __webpack_require__(0);
-const screen_1 = __webpack_require__(2);
-const tone_1 = __webpack_require__(17);
-const palette_1 = __webpack_require__(1);
-exports.characterDimensions = { w: screen_1.frustumSize * 0.8,
-    h: screen_1.frustumSize * 0.8
-};
-exports.characterPosition = { x: 0,
-    y: 0
-};
-const makeCharacter = (size) => ({ map: tone_1.toneMapZero(size),
-    size: size,
-    data: new ImageData(size, size)
-});
-exports.characterStateZero = { character: makeCharacter(128)
-};
-exports.characterData = () => immutable_1.Range(0, Math.pow(128, 2)).flatMap((_, i) => {
-    if (i == undefined)
-        return immutable_1.List();
-    const p = palette_1.fullPalette.get(Math.floor(Math.random() * 4));
-    return immutable_1.List([p.r, p.g, p.b]);
-}).toList();
-exports.updateCharacter = (s) => {
-    return s;
-};
-
-
-/***/ }),
 /* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -51332,7 +51341,7 @@ exports.mailboxZero = { paletteMail: immutable_1.List(),
     threeMail: immutable_1.List()
 };
 exports.updateMailbox = (s) => {
-    return s;
+    return Object.assign({}, s, { mailbox: exports.mailboxZero });
 };
 
 
@@ -51346,21 +51355,18 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const utils_1 = __webpack_require__(4);
 const input_1 = __webpack_require__(3);
 const state_1 = __webpack_require__(11);
-const three_1 = __webpack_require__(6);
 const input_2 = __webpack_require__(3);
-const character_1 = __webpack_require__(8);
-const palette_1 = __webpack_require__(1);
-const samples_1 = __webpack_require__(5);
+const character_1 = __webpack_require__(6);
 const mail_1 = __webpack_require__(9);
 const updateApp = (s) => {
     return s;
 };
 const update = (s) => {
-    const newState = utils_1.run(updateApp)(input_2.updateInput)(character_1.updateCharacter)(palette_1.updatePalette)(samples_1.updateSamples)(three_1.updateThree)(mail_1.updateMailbox)("with")(s);
+    const newState = utils_1.run(input_2.updateInput)(updateApp)(character_1.updateCharacter)(mail_1.updateMailbox)("with")(s);
     input_1.flush(); // Flush input buffers
     const t = s.three;
     t.renderer.render(t.scene, t.camera);
-    window.requestAnimationFrame(() => update(s));
+    window.requestAnimationFrame(() => update(newState));
 };
 const start = () => {
     const state = state_1.stateZero();
@@ -51376,9 +51382,9 @@ start();
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const three_1 = __webpack_require__(6);
+const three_1 = __webpack_require__(7);
 const input_1 = __webpack_require__(3);
-const character_1 = __webpack_require__(8);
+const character_1 = __webpack_require__(6);
 const palette_1 = __webpack_require__(1);
 const samples_1 = __webpack_require__(5);
 const mail_1 = __webpack_require__(9);
@@ -51418,13 +51424,13 @@ exports.selection = circleInTheSand;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const three_1 = __webpack_require__(7);
+const three_1 = __webpack_require__(8);
 const palette_1 = __webpack_require__(14);
 const samples_1 = __webpack_require__(15);
 const character_1 = __webpack_require__(16);
 const palette_2 = __webpack_require__(1);
 const samples_2 = __webpack_require__(5);
-const character_2 = __webpack_require__(8);
+const character_2 = __webpack_require__(6);
 exports.makeSurfaceGeometry = (dimensions) => {
     const geometry = new three_1.PlaneGeometry(dimensions.x, dimensions.y, 32);
     return geometry;

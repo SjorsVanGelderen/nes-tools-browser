@@ -20,6 +20,7 @@ export type SamplesMail =
 
 export type CharacterMail
   = { kind: "SetPixel", value: never }
+  | { kind: "Zoom", value: number }
 
 export type InputMail
   = { kind: "MouseMove", value: Point }
@@ -49,5 +50,5 @@ export const mailboxZero: Mailbox =
 
 
 export const updateMailbox: (s: State) => State = (s: State) => {
-  return s
+  return { ...s, mailbox: mailboxZero }
 }
