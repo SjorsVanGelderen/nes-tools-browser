@@ -16,11 +16,13 @@ varying vec2 uvPosition;
 
 void main()
 {
-  float hPart  = 1.0 / 128.0;
+  float s = 128.0;
+
+  float hPart  = 1.0 / s;
   float left   = floor(mousePosition.x / hPart) * hPart;
   float right  = left + hPart;
 
-  float vPart  = 1.0 / 128.0;
+  float vPart  = 1.0 / s;
   float bottom = ceil(mousePosition.y / vPart) * vPart;
   float top    = bottom - vPart;
 
@@ -29,6 +31,6 @@ void main()
               && uvPosition.y >= top
               && uvPosition.y <  bottom
     ? texture2D(texture, uvPosition)
-    : texture2D(texture, uvPosition); //vec4(texture2D(texture, uvPosition).xyz * 0.2, 1.0);
+    : vec4(texture2D(texture, uvPosition).xyz * 0.2, 1.0);
 }
 `

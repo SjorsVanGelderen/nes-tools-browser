@@ -14,7 +14,7 @@ export type PaletteMail = never
 
 export type SamplesMail =
   { kind: "ModifySample"
-  , index: number
+  , samplesIndex: number
   , paletteIndex: number
   }
 

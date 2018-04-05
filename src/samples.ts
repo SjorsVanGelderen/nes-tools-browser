@@ -5,12 +5,17 @@ import
 import
   { Point
   , Dimensions
+  , rectContains
   } from "./utils/utils"
 
 import
   { frustumSize
   , aspectRatio
   } from "./screen"
+
+import
+  { Mailbox
+  } from "./mail"
 
 import
   { PaletteColor
@@ -24,8 +29,9 @@ import
 export type Sample = List<number>
 
 export type SamplesState =
-  { samples:    List<Sample>
-  , background: number
+  { samples    : List<Sample>
+  , background : number
+  , active     : number
   }
 
 export const samplesStateZero: SamplesState =
@@ -36,7 +42,8 @@ export const samplesStateZero: SamplesState =
       , List([ 9, 10, 11 ])
       ]
     )
-  , background: 0
+  , background : 0
+  , active     : 0
   }
 
 export const samplesDimensions: Dimensions =
@@ -75,5 +82,36 @@ export const samplesData: () => List<number> = () => {
 }
 
 export const updateSamples: (s: State) => State = (s: State) => {
-  return s
+  const sp = s.samples
+  const sm = sp.samples
+  const mb = s.mailbox
+  const m  = s.input.mouse
+
+  const modMail = mb.samplesMail.find(x => x != undefined ? x.kind == "ModifySample" : false)
+
+  const newSm: List<Sample> = modMail
+    ? sm.setIn([sp.active, modMail.samplesIndex], modMail.paletteIndex)
+    : sm
+  
+  if(m.click.kind == "some") {
+    
+  }
+
+  const newActive = m.click.kind == "some"
+    ? rectContains(samplesPosition, samplesDimensions, m.click.value)
+      ? 4
+      : 0
+    : sp.active
+
+  const newState: State =
+    { ...s
+    , samples:
+      { ...s.samples
+      , samples: newSm
+      , active: newActive
+      }
+    , mailbox: { ...mb, samplesMail: List() }
+    }
+  
+  return newState
 }

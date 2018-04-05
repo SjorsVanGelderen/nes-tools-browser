@@ -30,14 +30,14 @@ import
   } from "./state"
 
 export type CharacterState =
-  { character: Character
-  , zoom:      number
+  { character : Character
+  , zoom      : number
   }
 
 export type Character = 
-  { map:  ToneMap
-  , size: number
-  , data: ImageData
+  { map  : ToneMap
+  , size : number
+  , data : ImageData
   }
 
 export const characterDimensions: Dimensions =
@@ -51,15 +51,15 @@ export const characterPosition: Point =
   }
 
 const makeCharacter: (size: number) => Character = (size: number) => (
-  { map:  toneMapZero(size)
-  , size: size
-  , data: new ImageData(size, size)
+  { map  :  toneMapZero(size)
+  , size : size
+  , data : new ImageData(size, size)
   }
 )
 
 export const characterStateZero: CharacterState =
-  { character: makeCharacter(128)
-  , zoom:      1
+  { character : makeCharacter(128)
+  , zoom      : 1
   }
 
 export const characterData: () => List<number> = () =>

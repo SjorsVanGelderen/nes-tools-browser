@@ -3,6 +3,7 @@ import
   , emptyOpt
   , makeOpt
   , Point
+  , run
   } from "./utils/utils"
 
 import
@@ -56,8 +57,8 @@ export const click: (p: Option<Point>) => (m: MouseState) => MouseState =
 export const move: (p: Point) => (m: MouseState) => MouseState =
   (p: Point) => (m: MouseState) => ({ ...m, position: p})
 
-export const press: (c: number) => (k: KeyboardState) => KeyboardState =
-  (c: number) => (k: KeyboardState) => ({ ...k, press: makeOpt(c) })
+export const press: (c: Option<number>) => (k: KeyboardState) => KeyboardState =
+  (c: Option<number>) => (k: KeyboardState) => ({ ...k, press: c })
 
 export const convertPosition: (p: Point) => Point = (p: Point) => {
   const widthRatio  = window.innerWidth  / p.x
@@ -96,16 +97,23 @@ export const flush: () => void = () => {
   keyPress   = emptyOpt()
 }
 
-const updateKeyboard: (s: KeyboardState) => KeyboardState = (s: KeyboardState) => {
-  const newState: KeyboardState = { ...s, press: keyPress }
+const updateMouse: (s: MouseState) => MouseState = (s: MouseState) =>
+  run(move(mousePosition))(click(mouseClick))("with")(s)
 
-  return newState
-}
+const updateKeyboard: (s: KeyboardState) => KeyboardState = (s: KeyboardState) =>
+  run(press(keyPress))("with")(s)
 
 export const updateInput: (s: State) => State = (s: State) => {
   const i: InputState = s.input
 
-  const newState: State = { ...s, input: { ...i, keyboard: updateKeyboard(i.keyboard) } }
+  const newState: State =
+    { ...s
+    , input:
+      { ...i
+      , mouse:    updateMouse(i.mouse)
+      , keyboard: updateKeyboard(i.keyboard)
+      }
+    }
 
   return newState
 }

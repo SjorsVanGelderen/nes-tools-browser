@@ -8,11 +8,18 @@ export const emptyOpt: <A>() => Option<A> =
 export const makeOpt: <A>(x: A) => Option<A> =
   <A>(x: A) => ({ kind: "some", value: x })
 
-export type Point      = { x: number, y: number }
+export type Point = { x: number, y: number }
 
 export const pointZero: Point = { x: 0, y: 0 }
 
 export type Dimensions = { w: number, h: number }
+
+export const rectContains: (topLeft: Point, d: Dimensions, p: Point) => boolean =
+  (topLeft: Point, d: Dimensions, p: Point) =>
+       p.x > topLeft.x
+    && p.x < topLeft.x + d.w
+    && p.y > topLeft.y
+    && p.y < topLeft.y + d.h
 
 export type Func<A, B> = (_: A) => B
 

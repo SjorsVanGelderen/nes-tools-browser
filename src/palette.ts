@@ -14,6 +14,10 @@ import
   } from "./screen"
 
 import
+  { Mailbox
+  } from "./mail"
+
+import
   { State
   } from "./state"
 
@@ -104,8 +108,8 @@ export const fullPalette: Palette = List<PaletteColor>(
 )
 
 export type PaletteState =
-  { position:   Point
-  , background: number
+  { position   : Point
+  , background : number
   }
 
 export const paletteDimensions: Dimensions =
@@ -119,8 +123,8 @@ export const palettePosition: Point =
   }
 
 export const paletteStateZero: PaletteState = 
-  { position:   palettePosition
-  , background: 64
+  { position   : palettePosition
+  , background : 64
   }
 
 export const paletteData: List<number> =
@@ -132,5 +136,21 @@ export const paletteData: List<number> =
   }).toList()
 
 export const updatePalette: (s: State) => State = (s: State) => {
-  return s
+  const i  = s.input
+  const m  = i.mouse
+  const p  = s.palette
+  const mb = s.mailbox
+
+  const sm = m.click.kind == "some" && m.click.value.x > 0
+    ? mb.samplesMail.push(
+      { kind         : "ModifySample"
+      , samplesIndex : 0
+      , paletteIndex : Math.floor(Math.random() * 64)
+      }
+    )
+    : mb.samplesMail
+
+  const newMb    : Mailbox = { ...mb, samplesMail: sm }
+  const newState : State   = { ...s, mailbox: newMb }
+  return newState
 }
