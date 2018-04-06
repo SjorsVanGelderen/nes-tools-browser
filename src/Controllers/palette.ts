@@ -1,0 +1,72 @@
+import
+  { List
+  , Range
+  } from "immutable"
+
+import
+  { Point
+  , Dimensions
+  } from "../utils"
+
+import
+  { frustumSize
+  , aspectRatio
+  } from "../screen"
+
+import
+  { Mailbox
+  } from "../Models/mail"
+
+import
+  { State
+  } from "../Models/state"
+
+import
+  { Palette
+  , PaletteColor
+  , PaletteState
+  , fullPalette
+  } from "../Models/palette"
+
+export const paletteDimensions: Dimensions =
+  { w: frustumSize / 4
+  , h: frustumSize
+  }
+
+export const palettePosition: Point =
+  { x: (frustumSize * aspectRatio) / 2 - paletteDimensions.w / 2
+  , y: 0
+  }
+
+export const paletteStateZero: PaletteState = 
+  { position   : palettePosition
+  , background : 64
+  }
+
+export const paletteData: List<number> =
+  Range(0, 64).flatMap((_, i) => {
+    if(i == undefined) return List<number>()
+
+    const p: PaletteColor = fullPalette.get(i)
+    return List([ p.r, p.g, p.b ])
+  }).toList()
+
+export const updatePalette: (s: State) => State = (s: State) => {
+  const i  = s.input
+  const m  = i.mouse
+  const p  = s.palette
+  const mb = s.mailbox
+
+  const sm = m.click.kind == "some" && m.click.value.x > 0
+    ? mb.samplesMail.push(
+      { kind         : "ModifySample"
+      , samplesIndex : 0
+      , paletteIndex : Math.floor(Math.random() * 64)
+      }
+    )
+    : mb.samplesMail
+
+  const newMb    : Mailbox = { ...mb, samplesMail: sm }
+  const newState : State   = { ...s, mailbox: newMb }
+  return newState
+}

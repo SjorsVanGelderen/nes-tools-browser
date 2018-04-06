@@ -6,33 +6,30 @@ import
   { Point
   , Dimensions
   , rectContains
-  } from "./utils/utils"
+  } from "../utils"
 
 import
   { frustumSize
   , aspectRatio
-  } from "./screen"
+  } from "../screen"
 
 import
   { Mailbox
-  } from "./mail"
+  } from "../Models/mail"
+
+import
+  { State
+  } from "../Models/state"
 
 import
   { PaletteColor
   , fullPalette
-  } from "./palette"
+  } from "../Models/palette"
 
 import
-  { State
-  } from "./state"
-
-export type Sample = List<number>
-
-export type SamplesState =
-  { samples    : List<Sample>
-  , background : number
-  , active     : number
-  }
+  { SamplesState
+  , Sample
+  } from "../Models/samples"
 
 export const samplesStateZero: SamplesState =
   { samples: List<Sample>(

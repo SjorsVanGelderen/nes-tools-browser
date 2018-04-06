@@ -6,39 +6,43 @@ import
 import
   { Point
   , Dimensions
-  } from "./utils/utils"
+  } from "../utils"
 
 import
   { frustumSize
   , aspectRatio
-  } from "./screen"
+  } from "../screen"
 
 import
-  { ToneMap
-  , toneMapZero
+  { ToneMap 
+  } from "../Models/tone"
+
+import
+  { toneMapZero
   , toneMapToData
-  } from "./tone";
+  } from "./tone"
 
 import
   { Palette
   , PaletteColor
   , fullPalette
-  } from "./palette"
+  } from "../Models/palette"
 
 import
   { State
-  } from "./state"
+  } from "../Models/state"
 
-export type CharacterState =
-  { character : Character
-  , zoom      : number
-  }
+import
+  { CharacterState
+  , Character
+  } from "../Models/character"
 
-export type Character = 
-  { map  : ToneMap
-  , size : number
-  , data : ImageData
+const makeCharacter: (size: number) => Character = (size: number) => (
+  { map  :  toneMapZero(size)
+  , size : size
+  , data : new ImageData(size, size)
   }
+)
 
 export const characterDimensions: Dimensions =
   { w: frustumSize * 0.8
@@ -49,13 +53,6 @@ export const characterPosition: Point =
   { x: 0
   , y: 0
   }
-
-const makeCharacter: (size: number) => Character = (size: number) => (
-  { map  :  toneMapZero(size)
-  , size : size
-  , data : new ImageData(size, size)
-  }
-)
 
 export const characterStateZero: CharacterState =
   { character : makeCharacter(128)

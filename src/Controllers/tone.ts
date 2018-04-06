@@ -4,22 +4,19 @@ import
   } from "immutable"
 
 import
-  { Palette
-  } from "./palette"
-
-import
   { Option
   , makeOpt
   , emptyOpt
-  } from "./utils/utils"
+  } from "../utils"
 
-export type Tone = 0 | 1 | 2 | 3
+import
+  { Palette
+  } from "../Models/palette"
 
-export type ToneMap =
-  { tones: List<Tone>
-  , size:  number
-  , dirty: boolean
-  }
+import
+  { ToneMap
+  , Tone
+  } from "../Models/tone"
 
 export const toneMapZero: (size: number) => ToneMap =
   (size: number) => (

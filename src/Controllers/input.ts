@@ -1,53 +1,45 @@
 import
   { Option
+  , Point
   , emptyOpt
   , makeOpt
-  , Point
   , run
-  } from "./utils/utils"
+  } from "../utils"
 
 import
   { screenWidth
   , screenHeight
-  } from "./screen"
+  } from "../screen"
 
 import
   { State
-  } from "./state"
+  } from "../Models/state"
+
+import
+  { InputState
+  , MouseState
+  , KeyboardState
+  } from "../Models/input"
 
 // Buffers for side-effects
-export let mousePosition: Point          = { x: 0, y: 0 }
-export let mouseClick:    Option<Point>  = emptyOpt()
-export let keyPress:      Option<number> = emptyOpt()
-
-type MouseState =
-  { position: Point
-  , click:    Option<Point>
-  }
-
-type KeyboardState =
-  { press: Option<number>
-  }
-
-export type InputState =
-  { mouse:    MouseState
-  , keyboard: KeyboardState
-  }
+export let mousePosition : Point          = { x: 0, y: 0 }
+export let mouseClick    : Option<Point>  = emptyOpt()
+export let keyPress      : Option<number> = emptyOpt()
 
 const mouseStateZero: () => MouseState = () => (
-  { position: { x: 0, y: 0 }
-  , click:    emptyOpt()
+  { position : { x: 0, y: 0 }
+  , click    : emptyOpt()
   }
 )
 
 const keyboardStateZero: () => KeyboardState = () => (
-  { press: emptyOpt()
+  { press : emptyOpt()
   }
 )
 
 export const inputStateZero: () => InputState = () => (
-  { mouse:    mouseStateZero()
-  , keyboard: keyboardStateZero()
+  { mouse    : mouseStateZero()
+  , keyboard : keyboardStateZero()
   }
 )
 
@@ -110,8 +102,8 @@ export const updateInput: (s: State) => State = (s: State) => {
     { ...s
     , input:
       { ...i
-      , mouse:    updateMouse(i.mouse)
-      , keyboard: updateKeyboard(i.keyboard)
+      , mouse    : updateMouse(i.mouse)
+      , keyboard : updateKeyboard(i.keyboard)
       }
     }
 

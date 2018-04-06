@@ -1,27 +1,23 @@
 import
   { run
-  } from "./utils/utils"
+  } from "../utils"
 
 import
   { flush
+  , updateInput
   } from "./input"
 
 import
   { State
-  , stateZero
-  } from "./state"
+  } from "../Models/state"
+
+import
+  { stateZero
+  } from "../Controllers/state"
 
 import
   { updateThree
-  } from "./three/three"
-
-import
-  { updateInput
-  } from "./input"
-
-import
-  { updateCharacter
-  } from "./character"
+  } from "./three"
 
 import
   { updatePalette
@@ -32,6 +28,10 @@ import
   } from "./samples"
 
 import
+  { updateCharacter
+  } from "./character"
+
+import
   { updateMailbox
   } from "./mail"
 
@@ -39,7 +39,7 @@ const updateApp: (s: State) => State = (s: State) => {
   return s
 }
 
-const update: (s: State) => void = (s: State) => {
+const tick: (s: State) => void = (s: State) => {
   const newState: State =
     run
       (updateInput)
@@ -57,12 +57,12 @@ const update: (s: State) => void = (s: State) => {
   const t = s.three
   t.renderer.render(t.scene, t.camera)
 
-  window.requestAnimationFrame(() => update(newState))
+  window.requestAnimationFrame(() => tick(newState))
 }
 
 const start: () => void = () => {
   const state: State = stateZero()
-  window.requestAnimationFrame(() => update(state))
+  window.requestAnimationFrame(() => tick(state))
 }
 
 start()

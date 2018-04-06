@@ -5065,8 +5065,88 @@ exports.screenHeight = exports.frustumSize;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const immutable_1 = __webpack_require__(0);
+exports.emptyOpt = () => ({ kind: "none" });
+exports.makeOpt = (x) => ({ kind: "some", value: x });
+exports.pointZero = { x: 0, y: 0 };
+exports.rectContains = (topLeft, d, p) => p.x > topLeft.x
+    && p.x < topLeft.x + d.w
+    && p.y > topLeft.y
+    && p.y < topLeft.y + d.h;
+exports.compose = (f, g) => (x) => g(f(x));
+exports.run = (f) => (g) => g == "with"
+    ? f
+    : exports.run(exports.compose(f, g));
+
+
+/***/ }),
+/* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const utils_1 = __webpack_require__(2);
 const screen_1 = __webpack_require__(1);
+// Buffers for side-effects
+exports.mousePosition = { x: 0, y: 0 };
+exports.mouseClick = utils_1.emptyOpt();
+exports.keyPress = utils_1.emptyOpt();
+const mouseStateZero = () => ({ position: { x: 0, y: 0 },
+    click: utils_1.emptyOpt()
+});
+const keyboardStateZero = () => ({ press: utils_1.emptyOpt()
+});
+exports.inputStateZero = () => ({ mouse: mouseStateZero(),
+    keyboard: keyboardStateZero()
+});
+exports.click = (p) => (m) => (Object.assign({}, m, { click: p }));
+exports.move = (p) => (m) => (Object.assign({}, m, { position: p }));
+exports.press = (c) => (k) => (Object.assign({}, k, { press: c }));
+exports.convertPosition = (p) => {
+    const widthRatio = window.innerWidth / p.x;
+    const heightRatio = window.innerHeight / p.y;
+    const x = screen_1.screenWidth / widthRatio - screen_1.screenWidth / 2;
+    const y = screen_1.screenHeight / heightRatio - screen_1.screenHeight / 2;
+    return { x: x, y: y };
+};
+exports.onMove = (e) => {
+    if (e != undefined) {
+        exports.mousePosition = exports.convertPosition({ x: e.x, y: e.y });
+    }
+};
+exports.onClick = (e) => {
+    if (e != undefined) {
+        exports.mouseClick = utils_1.makeOpt(exports.convertPosition({ x: e.x, y: e.y }));
+    }
+};
+exports.onScroll = (e) => {
+};
+exports.onKeyPress = (e) => {
+    if (e != undefined) {
+        exports.keyPress = utils_1.makeOpt(e.keyCode);
+    }
+};
+exports.flush = () => {
+    exports.mouseClick = utils_1.emptyOpt();
+    exports.keyPress = utils_1.emptyOpt();
+};
+const updateMouse = (s) => utils_1.run(exports.move(exports.mousePosition))(exports.click(exports.mouseClick))("with")(s);
+const updateKeyboard = (s) => utils_1.run(exports.press(exports.keyPress))("with")(s);
+exports.updateInput = (s) => {
+    const i = s.input;
+    const newState = Object.assign({}, s, { input: Object.assign({}, i, { mouse: updateMouse(i.mouse), keyboard: updateKeyboard(i.keyboard) }) });
+    return newState;
+};
+
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const immutable_1 = __webpack_require__(0);
 exports.fullPalette = immutable_1.List([{ r: 101, g: 101, b: 101 },
     { r: 176, g: 176, b: 176 },
     { r: 254, g: 254, b: 255 },
@@ -5132,101 +5212,75 @@ exports.fullPalette = immutable_1.List([{ r: 101, g: 101, b: 101 },
     { r: 0, g: 0, b: 0 },
     { r: 0, g: 0, b: 0 }
 ]);
-exports.paletteDimensions = { w: screen_1.frustumSize / 4,
-    h: screen_1.frustumSize
-};
-exports.palettePosition = { x: (screen_1.frustumSize * screen_1.aspectRatio) / 2 - exports.paletteDimensions.w / 2,
-    y: 0
-};
-exports.paletteStateZero = { position: exports.palettePosition,
-    background: 64
-};
-exports.paletteData = immutable_1.Range(0, 64).flatMap((_, i) => {
-    if (i == undefined)
-        return immutable_1.List();
-    const p = exports.fullPalette.get(i);
-    return immutable_1.List([p.r, p.g, p.b]);
-}).toList();
-exports.updatePalette = (s) => {
-    const i = s.input;
-    const m = i.mouse;
-    const p = s.palette;
-    const mb = s.mailbox;
-    const sm = m.click.kind == "some" && m.click.value.x > 0
-        ? mb.samplesMail.push({ kind: "ModifySample",
-            samplesIndex: 0,
-            paletteIndex: Math.floor(Math.random() * 64)
-        })
-        : mb.samplesMail;
-    const newMb = Object.assign({}, mb, { samplesMail: sm });
-    const newState = Object.assign({}, s, { mailbox: newMb });
-    return newState;
-};
 
 
 /***/ }),
-/* 3 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const utils_1 = __webpack_require__(5);
+const immutable_1 = __webpack_require__(0);
+const three_1 = __webpack_require__(12);
+const ColorSpec = __webpack_require__(13);
 const screen_1 = __webpack_require__(1);
-// Buffers for side-effects
-exports.mousePosition = { x: 0, y: 0 };
-exports.mouseClick = utils_1.emptyOpt();
-exports.keyPress = utils_1.emptyOpt();
-const mouseStateZero = () => ({ position: { x: 0, y: 0 },
-    click: utils_1.emptyOpt()
-});
-const keyboardStateZero = () => ({ press: utils_1.emptyOpt()
-});
-exports.inputStateZero = () => ({ mouse: mouseStateZero(),
-    keyboard: keyboardStateZero()
-});
-exports.click = (p) => (m) => (Object.assign({}, m, { click: p }));
-exports.move = (p) => (m) => (Object.assign({}, m, { position: p }));
-exports.press = (c) => (k) => (Object.assign({}, k, { press: c }));
-exports.convertPosition = (p) => {
-    const widthRatio = window.innerWidth / p.x;
-    const heightRatio = window.innerHeight / p.y;
-    const x = screen_1.screenWidth / widthRatio - screen_1.screenWidth / 2;
-    const y = screen_1.screenHeight / heightRatio - screen_1.screenHeight / 2;
-    return { x: x, y: y };
+const input_1 = __webpack_require__(3);
+const palette_1 = __webpack_require__(16);
+const samples_1 = __webpack_require__(15);
+const character_1 = __webpack_require__(19);
+exports.threeStateZero = () => {
+    const scene = makeScene();
+    const camera = makeCamera();
+    const renderer = makeRenderer();
+    const meshes = immutable_1.Map([["palette", palette_1.makeFullPaletteMesh()],
+        ["samples", samples_1.makeSamplesMesh()],
+        ["character", character_1.makeCharacterMesh()]
+    ]);
+    meshes.valueSeq().forEach(x => x != undefined ? scene.add(x) : {});
+    const shaders = immutable_1.Map();
+    return ({ scene: scene,
+        camera: camera,
+        renderer: renderer,
+        meshes: meshes,
+        shaders: shaders
+    });
 };
-exports.onMove = (e) => {
-    if (e != undefined) {
-        exports.mousePosition = exports.convertPosition({ x: e.x, y: e.y });
-    }
+const makeScene = () => {
+    const scene = new three_1.Scene();
+    scene.background = new three_1.Color(ColorSpec.background);
+    return scene;
 };
-exports.onClick = (e) => {
-    if (e != undefined) {
-        exports.mouseClick = utils_1.makeOpt(exports.convertPosition({ x: e.x, y: e.y }));
-    }
+const makeRenderer = () => {
+    const renderer = new three_1.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    const element = document.body.appendChild(renderer.domElement);
+    element.addEventListener("mousemove", input_1.onMove, false);
+    element.addEventListener("mousedown", input_1.onClick, false);
+    // element.addEventListener("scroll",    onScroll, false)
+    // Adding to element doesn't seem to work
+    window.addEventListener("keypress", input_1.onKeyPress, false);
+    return renderer;
 };
-exports.onScroll = (e) => {
+const makeCamera = () => {
+    const camera = new three_1.OrthographicCamera(screen_1.frustumSize * screen_1.aspectRatio / -2, screen_1.frustumSize * screen_1.aspectRatio / 2, screen_1.frustumSize / 2, screen_1.frustumSize / -2, 1, screen_1.frustumSize * 2);
+    camera.position.z = 100;
+    camera.lookAt(new three_1.Vector3(0, 0, 0));
+    return camera;
 };
-exports.onKeyPress = (e) => {
-    if (e != undefined) {
-        exports.keyPress = utils_1.makeOpt(e.keyCode);
-    }
+exports.makeSurfaceGeometry = (dimensions) => {
+    const geometry = new three_1.PlaneGeometry(dimensions.x, dimensions.y, 32);
+    return geometry;
 };
-exports.flush = () => {
-    exports.mouseClick = utils_1.emptyOpt();
-    exports.keyPress = utils_1.emptyOpt();
-};
-const updateMouse = (s) => utils_1.run(exports.move(exports.mousePosition))(exports.click(exports.mouseClick))("with")(s);
-const updateKeyboard = (s) => utils_1.run(exports.press(exports.keyPress))("with")(s);
-exports.updateInput = (s) => {
-    const i = s.input;
-    const newState = Object.assign({}, s, { input: Object.assign({}, i, { mouse: updateMouse(i.mouse), keyboard: updateKeyboard(i.keyboard) }) });
-    return newState;
+exports.updateThree = (s) => {
+    // Palette.updatePalette(s)
+    // Character.updateCharacter(s)
+    return s;
 };
 
 
 /***/ }),
-/* 4 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5234,18 +5288,18 @@ exports.updateInput = (s) => {
 Object.defineProperty(exports, "__esModule", { value: true });
 const immutable_1 = __webpack_require__(0);
 const screen_1 = __webpack_require__(1);
-const tone_1 = __webpack_require__(17);
-const palette_1 = __webpack_require__(2);
+const tone_1 = __webpack_require__(14);
+const palette_1 = __webpack_require__(4);
+const makeCharacter = (size) => ({ map: tone_1.toneMapZero(size),
+    size: size,
+    data: new ImageData(size, size)
+});
 exports.characterDimensions = { w: screen_1.frustumSize * 0.8,
     h: screen_1.frustumSize * 0.8
 };
 exports.characterPosition = { x: 0,
     y: 0
 };
-const makeCharacter = (size) => ({ map: tone_1.toneMapZero(size),
-    size: size,
-    data: new ImageData(size, size)
-});
 exports.characterStateZero = { character: makeCharacter(128),
     zoom: 1
 };
@@ -5267,36 +5321,58 @@ exports.updateCharacter = (s) => {
 
 
 /***/ }),
-/* 5 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.emptyOpt = () => ({ kind: "none" });
-exports.makeOpt = (x) => ({ kind: "some", value: x });
-exports.pointZero = { x: 0, y: 0 };
-exports.rectContains = (topLeft, d, p) => p.x > topLeft.x
-    && p.x < topLeft.x + d.w
-    && p.y > topLeft.y
-    && p.y < topLeft.y + d.h;
-exports.compose = (f, g) => (x) => g(f(x));
-exports.run = (f) => (g) => g == "with"
-    ? f
-    : exports.run(exports.compose(f, g));
-
-
-/***/ }),
-/* 6 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const immutable_1 = __webpack_require__(0);
-const utils_1 = __webpack_require__(5);
 const screen_1 = __webpack_require__(1);
-const palette_1 = __webpack_require__(2);
+const palette_1 = __webpack_require__(4);
+exports.paletteDimensions = { w: screen_1.frustumSize / 4,
+    h: screen_1.frustumSize
+};
+exports.palettePosition = { x: (screen_1.frustumSize * screen_1.aspectRatio) / 2 - exports.paletteDimensions.w / 2,
+    y: 0
+};
+exports.paletteStateZero = { position: exports.palettePosition,
+    background: 64
+};
+exports.paletteData = immutable_1.Range(0, 64).flatMap((_, i) => {
+    if (i == undefined)
+        return immutable_1.List();
+    const p = palette_1.fullPalette.get(i);
+    return immutable_1.List([p.r, p.g, p.b]);
+}).toList();
+exports.updatePalette = (s) => {
+    const i = s.input;
+    const m = i.mouse;
+    const p = s.palette;
+    const mb = s.mailbox;
+    const sm = m.click.kind == "some" && m.click.value.x > 0
+        ? mb.samplesMail.push({ kind: "ModifySample",
+            samplesIndex: 0,
+            paletteIndex: Math.floor(Math.random() * 64)
+        })
+        : mb.samplesMail;
+    const newMb = Object.assign({}, mb, { samplesMail: sm });
+    const newState = Object.assign({}, s, { mailbox: newMb });
+    return newState;
+};
+
+
+/***/ }),
+/* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const immutable_1 = __webpack_require__(0);
+const utils_1 = __webpack_require__(2);
+const screen_1 = __webpack_require__(1);
+const palette_1 = __webpack_require__(4);
 exports.samplesStateZero = { samples: immutable_1.List([immutable_1.List([0, 1, 2]),
         immutable_1.List([3, 4, 5]),
         immutable_1.List([6, 7, 8]),
@@ -5350,204 +5426,80 @@ exports.updateSamples = (s) => {
 
 
 /***/ }),
-/* 7 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const ColorSpec = __webpack_require__(12);
 const immutable_1 = __webpack_require__(0);
-const three_1 = __webpack_require__(8);
-const screen_1 = __webpack_require__(1);
-const input_1 = __webpack_require__(3);
-const palette_1 = __webpack_require__(2);
-const palette_2 = __webpack_require__(14);
-const samples_1 = __webpack_require__(15);
-const samples_2 = __webpack_require__(6);
-const character_1 = __webpack_require__(16);
-const character_2 = __webpack_require__(4);
-var Palette;
-(function (Palette) {
-    Palette.updatePalette = (s) => {
-        const m = s.input.mouse.position;
-        const t = s.three;
-        const p = t.meshes.get("palette");
-        const pos = { x: -((p.position.x - palette_1.paletteDimensions.w / 2 - m.x) / palette_1.paletteDimensions.w),
-            y: -((p.position.y - palette_1.paletteDimensions.h / 2 + m.y) / palette_1.paletteDimensions.h)
-        };
-        const ps = p.material;
-        const u = ps.uniforms;
-        u.mousePosition.value = pos;
-    };
-    Palette.makeFullPaletteMesh = () => {
-        const resolution = { x: 4, y: 16 };
-        const dataArray = new Uint8Array(palette_1.paletteData.toArray());
-        const texture = new three_1.DataTexture(dataArray, resolution.x, resolution.y, three_1.RGBFormat);
-        texture.needsUpdate = true;
-        const uniforms = { texture: new three_1.Uniform(texture),
-            mousePosition: new three_1.Uniform(new three_1.Vector2(0, 0))
-        };
-        const shaderData = { uniforms: uniforms,
-            vertexShader: palette_2.paletteVert,
-            fragmentShader: palette_2.paletteFrag
-        };
-        const dimensions = new three_1.Vector2(palette_1.paletteDimensions.w, palette_1.paletteDimensions.h);
-        const material = new three_1.ShaderMaterial(shaderData);
-        const geometry = makeSurfaceGeometry(dimensions);
-        const palette = new three_1.Mesh(geometry, material);
-        palette.matrixAutoUpdate = false;
-        palette.position.set(palette_1.palettePosition.x, palette_1.palettePosition.y, 0);
-        palette.updateMatrix();
-        return palette;
-    };
-})(Palette || (Palette = {}));
-var Character;
-(function (Character) {
-    Character.updateCharacter = (s) => {
-        const m = s.input.mouse.position;
-        const t = s.three;
-        const c = t.meshes.get("character");
-        const pos = { x: -((c.position.x - character_2.characterDimensions.w / 2 - m.x) / character_2.characterDimensions.w),
-            y: -((c.position.y - character_2.characterDimensions.h / 2 + m.y) / character_2.characterDimensions.h)
-        };
-        const cs = c.material;
-        const u = cs.uniforms;
-        u.mousePosition.value = pos;
-    };
-    Character.makeCharacterMesh = () => {
-        const dataArray = new Uint8Array(character_2.characterData().toArray());
-        const texture = new three_1.DataTexture(dataArray, 128, 128, three_1.RGBFormat);
-        texture.needsUpdate = true;
-        const uniforms = { texture: new three_1.Uniform(texture),
-            mousePosition: new three_1.Uniform(new three_1.Vector2(0, 0))
-        };
-        const shaderData = { uniforms: uniforms,
-            vertexShader: character_1.characterVert,
-            fragmentShader: character_1.characterFrag
-        };
-        const dimensions = new three_1.Vector2(character_2.characterDimensions.w, character_2.characterDimensions.h);
-        const material = new three_1.ShaderMaterial(shaderData);
-        const geometry = makeSurfaceGeometry(dimensions);
-        const character = new three_1.Mesh(geometry, material);
-        character.matrixAutoUpdate = false;
-        character.position.set(character_2.characterPosition.x, character_2.characterPosition.y, -1);
-        character.updateMatrix();
-        return character;
-    };
-    // export const makeCharacterMesh: () => Mesh = () => {
-    //   const characterSize: number = 16
-    //   const characterData: List<number> = Range(0, characterSize ** 2 * 3).map(x => 255).toList()
-    //   const character: Mesh = makeSurface
-    //     (new Vector2(frustumSize * aspectRatio / - 2, frustumSize * aspectRatio / - 2))
-    //     (new Vector2(characterSize, characterSize))
-    //     (characterData)
-    //   character.position.set(-300, 0, 0)
-    //   return character
-    // }
-    // export const characterToSurface: (p: Palette) => (c: Character) => Uint8ClampedArray =
-    //   (p: Palette) => (c: Character) => {
-    //     const data: Uint8ClampedArray = toneMapToData(p)(c.map.tones).toArray()
-    //     return data
-    //   }
-})(Character || (Character = {}));
-var Samples;
-(function (Samples) {
-    Samples.makeSamplesMesh = () => {
-        const dataArray = new Uint8Array(samples_2.samplesData().toArray());
-        const texture = new three_1.DataTexture(dataArray, 1, 10, three_1.RGBFormat);
-        texture.needsUpdate = true;
-        const uniforms = { texture: new three_1.Uniform(texture),
-            mousePosition: new three_1.Uniform(new three_1.Vector2(0, 0))
-        };
-        const shaderData = { uniforms: uniforms,
-            vertexShader: samples_1.samplesVert,
-            fragmentShader: samples_1.samplesFrag
-        };
-        const dimensions = new three_1.Vector2(samples_2.samplesDimensions.w, samples_2.samplesDimensions.h);
-        const material = new three_1.ShaderMaterial(shaderData);
-        const geometry = makeSurfaceGeometry(dimensions);
-        const samples = new three_1.Mesh(geometry, material);
-        samples.matrixAutoUpdate = false;
-        samples.position.set(samples_2.samplesPosition.x, samples_2.samplesPosition.y, 0);
-        samples.updateMatrix();
-        return samples;
-    };
-    // export const updateSamplesDataTexture: () => void = () => {
-    //   const dataArray = new Uint8Array(samplesData().toArray())
-    //   const texture = new DataTexture(dataArray, 1, 10, RGBFormat)
-    //   texture.needsUpdate = true
-    //   const uniforms: SamplesUniforms =
-    //     { texture:       new Uniform(texture)
-    //     , mousePosition: new Uniform(new Vector2(0, 0))
-    //     }
-    //   const shaderData: SamplesShaderData =
-    //     { uniforms:       uniforms
-    //     , vertexShader:   samplesVert
-    //     , fragmentShader: samplesFrag
-    //     }
-    //   const dimensions = new Vector2(samplesDimensions.w, samplesDimensions.h)
-    //   const material   = new ShaderMaterial(shaderData)
-    //   const geometry   = makeSurfaceGeometry(dimensions)
-    //   const samples    = new Mesh(geometry, material)
-    //   samples.matrixAutoUpdate = false
-    //   samples.position.set(samplesPosition.x, samplesPosition.y, 0)
-    //   samples.updateMatrix()
-    //   return samples
-    // }
-})(Samples || (Samples = {}));
-exports.threeStateZero = () => {
-    const scene = makeScene();
-    const camera = makeCamera();
-    const renderer = makeRenderer();
-    const meshes = immutable_1.Map([["palette", Palette.makeFullPaletteMesh()],
-        ["samples", Samples.makeSamplesMesh()],
-        ["character", Character.makeCharacterMesh()]
-    ]);
-    meshes.valueSeq().forEach(x => x != undefined ? scene.add(x) : {});
-    const shaders = immutable_1.Map();
-    return ({ scene: scene,
-        camera: camera,
-        renderer: renderer,
-        meshes: meshes,
-        shaders: shaders
-    });
+exports.mailboxZero = { paletteMail: immutable_1.List(),
+    samplesMail: immutable_1.List(),
+    characterMail: immutable_1.List(),
+    inputMail: immutable_1.List(),
+    threeMail: immutable_1.List()
 };
-const makeScene = () => {
-    const scene = new three_1.Scene();
-    scene.background = new three_1.Color(ColorSpec.background);
-    return scene;
-};
-const makeRenderer = () => {
-    const renderer = new three_1.WebGLRenderer();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    const element = document.body.appendChild(renderer.domElement);
-    element.addEventListener("mousemove", input_1.onMove, false);
-    element.addEventListener("mousedown", input_1.onClick, false);
-    // element.addEventListener("scroll",    onScroll, false)
-    // Adding to element doesn't seem to work
-    window.addEventListener("keypress", input_1.onKeyPress, false);
-    return renderer;
-};
-const makeCamera = () => {
-    const camera = new three_1.OrthographicCamera(screen_1.frustumSize * screen_1.aspectRatio / -2, screen_1.frustumSize * screen_1.aspectRatio / 2, screen_1.frustumSize / 2, screen_1.frustumSize / -2, 1, screen_1.frustumSize * 2);
-    camera.position.z = 100;
-    camera.lookAt(new three_1.Vector3(0, 0, 0));
-    return camera;
-};
-const makeSurfaceGeometry = (dimensions) => {
-    const geometry = new three_1.PlaneGeometry(dimensions.x, dimensions.y, 32);
-    return geometry;
-};
-exports.updateThree = (s) => {
-    Palette.updatePalette(s);
-    Character.updateCharacter(s);
-    return s;
+exports.updateMailbox = (s) => {
+    return Object.assign({}, s, { mailbox: exports.mailboxZero });
 };
 
 
 /***/ }),
-/* 8 */
+/* 10 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const utils_1 = __webpack_require__(2);
+const input_1 = __webpack_require__(3);
+const state_1 = __webpack_require__(11);
+const three_1 = __webpack_require__(5);
+const palette_1 = __webpack_require__(7);
+const samples_1 = __webpack_require__(8);
+const character_1 = __webpack_require__(6);
+const mail_1 = __webpack_require__(9);
+const updateApp = (s) => {
+    return s;
+};
+const tick = (s) => {
+    const newState = utils_1.run(input_1.updateInput)(updateApp)(character_1.updateCharacter)(palette_1.updatePalette)(samples_1.updateSamples)(three_1.updateThree)(mail_1.updateMailbox)("with")(s);
+    input_1.flush(); // Flush input buffers
+    const t = s.three;
+    t.renderer.render(t.scene, t.camera);
+    window.requestAnimationFrame(() => tick(newState));
+};
+const start = () => {
+    const state = state_1.stateZero();
+    window.requestAnimationFrame(() => tick(state));
+};
+start();
+
+
+/***/ }),
+/* 11 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const three_1 = __webpack_require__(5);
+const input_1 = __webpack_require__(3);
+const character_1 = __webpack_require__(6);
+const palette_1 = __webpack_require__(7);
+const samples_1 = __webpack_require__(8);
+const mail_1 = __webpack_require__(9);
+exports.stateZero = () => ({ three: three_1.threeStateZero(),
+    input: input_1.inputStateZero(),
+    character: character_1.characterStateZero,
+    palette: palette_1.paletteStateZero,
+    samples: samples_1.samplesStateZero,
+    mailbox: mail_1.mailboxZero
+});
+
+
+/***/ }),
+/* 12 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -51489,83 +51441,7 @@ function LensFlare() {
 
 
 /***/ }),
-/* 9 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-const immutable_1 = __webpack_require__(0);
-exports.mailboxZero = { paletteMail: immutable_1.List(),
-    samplesMail: immutable_1.List(),
-    characterMail: immutable_1.List(),
-    inputMail: immutable_1.List(),
-    threeMail: immutable_1.List()
-};
-exports.updateMailbox = (s) => {
-    return Object.assign({}, s, { mailbox: exports.mailboxZero });
-};
-
-
-/***/ }),
-/* 10 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-const utils_1 = __webpack_require__(5);
-const input_1 = __webpack_require__(3);
-const state_1 = __webpack_require__(11);
-const three_1 = __webpack_require__(7);
-const input_2 = __webpack_require__(3);
-const character_1 = __webpack_require__(4);
-const palette_1 = __webpack_require__(2);
-const samples_1 = __webpack_require__(6);
-const mail_1 = __webpack_require__(9);
-const updateApp = (s) => {
-    return s;
-};
-const update = (s) => {
-    const newState = utils_1.run(input_2.updateInput)(updateApp)(character_1.updateCharacter)(palette_1.updatePalette)(samples_1.updateSamples)(three_1.updateThree)(mail_1.updateMailbox)("with")(s);
-    input_1.flush(); // Flush input buffers
-    const t = s.three;
-    t.renderer.render(t.scene, t.camera);
-    window.requestAnimationFrame(() => update(newState));
-};
-const start = () => {
-    const state = state_1.stateZero();
-    window.requestAnimationFrame(() => update(state));
-};
-start();
-
-
-/***/ }),
-/* 11 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-const three_1 = __webpack_require__(7);
-const input_1 = __webpack_require__(3);
-const character_1 = __webpack_require__(4);
-const palette_1 = __webpack_require__(2);
-const samples_1 = __webpack_require__(6);
-const mail_1 = __webpack_require__(9);
-exports.stateZero = () => {
-    return ({ three: three_1.threeStateZero(),
-        input: input_1.inputStateZero(),
-        character: character_1.characterStateZero,
-        palette: palette_1.paletteStateZero,
-        samples: samples_1.samplesStateZero,
-        mailbox: mail_1.mailboxZero
-    });
-};
-
-
-/***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -51583,8 +51459,137 @@ exports.selection = circleInTheSand;
 
 
 /***/ }),
-/* 13 */,
 /* 14 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const immutable_1 = __webpack_require__(0);
+const utils_1 = __webpack_require__(2);
+exports.toneMapZero = (size) => ({ tones: immutable_1.Range(0, Math.pow(128, 2)).map(x => Math.floor(Math.random() * 4)).toList(),
+    size: size,
+    dirty: true
+});
+exports.getTone = (x, y) => (m) => {
+    const tone = m.tones.get(x + y * m.size);
+    return tone != undefined
+        ? utils_1.makeOpt(tone)
+        : utils_1.emptyOpt();
+};
+exports.setTone = (x, y) => (m) => (t) => {
+    const location = x + y * m.size;
+    return m.tones.count() > location
+        ? Object.assign({}, m, { tones: m.tones.set(location, t) }) : m;
+};
+exports.toneMapToData = (p) => (t) => immutable_1.List(t.flatMap(i => i != undefined
+    ? p.skip(i * 4).take(4)
+    : [255, 0, 0, 0]));
+
+
+/***/ }),
+/* 15 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const three_1 = __webpack_require__(12);
+const three_2 = __webpack_require__(5);
+const samples_1 = __webpack_require__(8);
+const samples_2 = __webpack_require__(18);
+exports.makeSamplesMesh = () => {
+    const dataArray = new Uint8Array(samples_1.samplesData().toArray());
+    const texture = new three_1.DataTexture(dataArray, 1, 10, three_1.RGBFormat);
+    texture.needsUpdate = true;
+    const uniforms = { texture: new three_1.Uniform(texture),
+        mousePosition: new three_1.Uniform(new three_1.Vector2(0, 0))
+    };
+    const shaderData = { uniforms: uniforms,
+        vertexShader: samples_2.samplesVert,
+        fragmentShader: samples_2.samplesFrag
+    };
+    const dimensions = new three_1.Vector2(samples_1.samplesDimensions.w, samples_1.samplesDimensions.h);
+    const material = new three_1.ShaderMaterial(shaderData);
+    const geometry = three_2.makeSurfaceGeometry(dimensions);
+    const samples = new three_1.Mesh(geometry, material);
+    samples.matrixAutoUpdate = false;
+    samples.position.set(samples_1.samplesPosition.x, samples_1.samplesPosition.y, 0);
+    samples.updateMatrix();
+    return samples;
+};
+// export const updateSamplesDataTexture: () => void = () => {
+//   const dataArray = new Uint8Array(samplesData().toArray())
+//   const texture = new DataTexture(dataArray, 1, 10, RGBFormat)
+//   texture.needsUpdate = true
+//   const uniforms: SamplesUniforms =
+//     { texture:       new Uniform(texture)
+//     , mousePosition: new Uniform(new Vector2(0, 0))
+//     }
+//   const shaderData: SamplesShaderData =
+//     { uniforms:       uniforms
+//     , vertexShader:   samplesVert
+//     , fragmentShader: samplesFrag
+//     }
+//   const dimensions = new Vector2(samplesDimensions.w, samplesDimensions.h)
+//   const material   = new ShaderMaterial(shaderData)
+//   const geometry   = makeSurfaceGeometry(dimensions)
+//   const samples    = new Mesh(geometry, material)
+//   samples.matrixAutoUpdate = false
+//   samples.position.set(samplesPosition.x, samplesPosition.y, 0)
+//   samples.updateMatrix()
+//   return samples
+// }
+
+
+/***/ }),
+/* 16 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const three_1 = __webpack_require__(12);
+const three_2 = __webpack_require__(5);
+const palette_1 = __webpack_require__(7);
+const palette_2 = __webpack_require__(17);
+exports.makeFullPaletteMesh = () => {
+    const resolution = { x: 4, y: 16 };
+    const dataArray = new Uint8Array(palette_1.paletteData.toArray());
+    const texture = new three_1.DataTexture(dataArray, resolution.x, resolution.y, three_1.RGBFormat);
+    texture.needsUpdate = true;
+    const uniforms = { texture: new three_1.Uniform(texture),
+        mousePosition: new three_1.Uniform(new three_1.Vector2(0, 0))
+    };
+    const shaderData = { uniforms: uniforms,
+        vertexShader: palette_2.paletteVert,
+        fragmentShader: palette_2.paletteFrag
+    };
+    const dimensions = new three_1.Vector2(palette_1.paletteDimensions.w, palette_1.paletteDimensions.h);
+    const material = new three_1.ShaderMaterial(shaderData);
+    const geometry = three_2.makeSurfaceGeometry(dimensions);
+    const palette = new three_1.Mesh(geometry, material);
+    palette.matrixAutoUpdate = false;
+    palette.position.set(palette_1.palettePosition.x, palette_1.palettePosition.y, 0);
+    palette.updateMatrix();
+    return palette;
+};
+exports.updatePalette = (s) => {
+    // const m : Point      = s.input.mouse.position
+    // const t : ThreeState = s.three
+    // const p : Mesh       = t.meshes.get("palette")
+    // const pos: Point =
+    //   { x: -((p.position.x - paletteDimensions.w / 2 - m.x) / paletteDimensions.w)
+    //   , y: -((p.position.y - paletteDimensions.h / 2 + m.y) / paletteDimensions.h)
+    //   }
+    // const ps: ShaderMaterial  = p.material  as ShaderMaterial
+    // const u:  PaletteUniforms = ps.uniforms as PaletteUniforms
+    // u.mousePosition.value = pos
+};
+
+
+/***/ }),
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -51626,7 +51631,7 @@ void main()
 
 
 /***/ }),
-/* 15 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -51668,7 +51673,67 @@ void main()
 
 
 /***/ }),
-/* 16 */
+/* 19 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const three_1 = __webpack_require__(12);
+const three_2 = __webpack_require__(5);
+const character_1 = __webpack_require__(6);
+const character_2 = __webpack_require__(20);
+exports.updateCharacter = (s) => {
+    // const m : Point      = s.input.mouse.position
+    // const t : ThreeState = s.three
+    // const c : Mesh       = t.meshes.get("character")
+    // const pos:  Point =
+    //   { x: -((c.position.x - characterDimensions.w / 2 - m.x) / characterDimensions.w)
+    //   , y: -((c.position.y - characterDimensions.h / 2 + m.y) / characterDimensions.h)
+    //   }
+    // const cs : ShaderMaterial    = c.material  as ShaderMaterial
+    // const u  : CharacterUniforms = cs.uniforms as CharacterUniforms
+    // u.mousePosition.value = pos
+};
+exports.makeCharacterMesh = () => {
+    const dataArray = new Uint8Array(character_1.characterData().toArray());
+    const texture = new three_1.DataTexture(dataArray, 128, 128, three_1.RGBFormat);
+    texture.needsUpdate = true;
+    const uniforms = { texture: new three_1.Uniform(texture),
+        mousePosition: new three_1.Uniform(new three_1.Vector2(0, 0))
+    };
+    const shaderData = { uniforms: uniforms,
+        vertexShader: character_2.characterVert,
+        fragmentShader: character_2.characterFrag
+    };
+    const dimensions = new three_1.Vector2(character_1.characterDimensions.w, character_1.characterDimensions.h);
+    const material = new three_1.ShaderMaterial(shaderData);
+    const geometry = three_2.makeSurfaceGeometry(dimensions);
+    const character = new three_1.Mesh(geometry, material);
+    character.matrixAutoUpdate = false;
+    character.position.set(character_1.characterPosition.x, character_1.characterPosition.y, -1);
+    character.updateMatrix();
+    return character;
+};
+// export const makeCharacterMesh: () => Mesh = () => {
+//   const characterSize: number = 16
+//   const characterData: List<number> = Range(0, characterSize ** 2 * 3).map(x => 255).toList()
+//   const character: Mesh = makeSurface
+//     (new Vector2(frustumSize * aspectRatio / - 2, frustumSize * aspectRatio / - 2))
+//     (new Vector2(characterSize, characterSize))
+//     (characterData)
+//   character.position.set(-300, 0, 0)
+//   return character
+// }
+// export const characterToSurface: (p: Palette) => (c: Character) => Uint8ClampedArray =
+//   (p: Palette) => (c: Character) => {
+//     const data: Uint8ClampedArray = toneMapToData(p)(c.map.tones).toArray()
+//     return data
+//   }
+
+
+/***/ }),
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -51709,35 +51774,6 @@ void main()
     : vec4(texture2D(texture, uvPosition).xyz * 0.2, 1.0);
 }
 `;
-
-
-/***/ }),
-/* 17 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-const immutable_1 = __webpack_require__(0);
-const utils_1 = __webpack_require__(5);
-exports.toneMapZero = (size) => ({ tones: immutable_1.Range(0, Math.pow(128, 2)).map(x => Math.floor(Math.random() * 4)).toList(),
-    size: size,
-    dirty: true
-});
-exports.getTone = (x, y) => (m) => {
-    const tone = m.tones.get(x + y * m.size);
-    return tone != undefined
-        ? utils_1.makeOpt(tone)
-        : utils_1.emptyOpt();
-};
-exports.setTone = (x, y) => (m) => (t) => {
-    const location = x + y * m.size;
-    return m.tones.count() > location
-        ? Object.assign({}, m, { tones: m.tones.set(location, t) }) : m;
-};
-exports.toneMapToData = (p) => (t) => immutable_1.List(t.flatMap(i => i != undefined
-    ? p.skip(i * 4).take(4)
-    : [255, 0, 0, 0]));
 
 
 /***/ })
