@@ -79,6 +79,10 @@ export async function makeSamplesMesh(): Promise<Option<Mesh>> {
   return makeOpt(samples)
 }
 
+export const updateSamplesView: (s: State, sm: Mesh) => void = (s: State, sm: Mesh) => {
+  
+}
+
 // export const updateSamplesDataTexture: () => void = () => {
   //   const dataArray = new Uint8Array(samplesData().toArray())
 

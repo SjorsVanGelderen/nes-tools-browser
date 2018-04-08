@@ -45,10 +45,12 @@ import
 
 import
   { makeFullPaletteMesh
+  , updatePaletteView
   } from "../Views/palette"
 
 import
-  { makeSamplesMesh 
+  { makeSamplesMesh
+  , updateSamplesView
   } from "../Views/samples"
 
 import
@@ -137,10 +139,16 @@ export const makeSurfaceGeometry: (dimensions: Vector2) => Geometry =
 
 export const updateThree: (s: State) => State = (s: State) => {
   const t  = s.three
-  const cm = t.meshes.get("character")
-  const c  = cm != undefined ? cm : emptyOpt<Mesh>()
+  const pM = t.meshes.get("palette")
+  const sM = t.meshes.get("samples")
+  const cM = t.meshes.get("character")
+  const pm = pM != undefined ? pM : emptyOpt<Mesh>()
+  const sm = sM != undefined ? sM : emptyOpt<Mesh>()
+  const cm = cM != undefined ? cM : emptyOpt<Mesh>()
 
-  if(c.kind == "some") updateCharacterView(s, c.value)
+  if(pm.kind == "some") updatePaletteView(s, pm.value)
+  if(sm.kind == "some") updateSamplesView(s, sm.value)
+  if(cm.kind == "some") updateCharacterView(s, cm.value)
 
   return s
 }

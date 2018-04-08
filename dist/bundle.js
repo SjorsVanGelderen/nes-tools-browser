@@ -5192,10 +5192,18 @@ exports.makeSurfaceGeometry = (dimensions) => {
 };
 exports.updateThree = (s) => {
     const t = s.three;
-    const cm = t.meshes.get("character");
-    const c = cm != undefined ? cm : utils_1.emptyOpt();
-    if (c.kind == "some")
-        character_1.updateCharacterView(s, c.value);
+    const pM = t.meshes.get("palette");
+    const sM = t.meshes.get("samples");
+    const cM = t.meshes.get("character");
+    const pm = pM != undefined ? pM : utils_1.emptyOpt();
+    const sm = sM != undefined ? sM : utils_1.emptyOpt();
+    const cm = cM != undefined ? cM : utils_1.emptyOpt();
+    if (pm.kind == "some")
+        palette_1.updatePaletteView(s, pm.value);
+    if (sm.kind == "some")
+        samples_1.updateSamplesView(s, sm.value);
+    if (cm.kind == "some")
+        character_1.updateCharacterView(s, cm.value);
     return s;
 };
 
@@ -51588,17 +51596,14 @@ function makeFullPaletteMesh() {
     });
 }
 exports.makeFullPaletteMesh = makeFullPaletteMesh;
-exports.updatePalette = (s) => {
-    // const m : Point      = s.input.mouse.position
-    // const t : ThreeState = s.three
-    // const p : Mesh       = t.meshes.get("palette")
-    // const pos: Point =
-    //   { x: -((p.position.x - paletteDimensions.w / 2 - m.x) / paletteDimensions.w)
-    //   , y: -((p.position.y - paletteDimensions.h / 2 + m.y) / paletteDimensions.h)
-    //   }
-    // const ps: ShaderMaterial  = p.material  as ShaderMaterial
-    // const u:  PaletteUniforms = ps.uniforms as PaletteUniforms
-    // u.mousePosition.value = pos
+exports.updatePaletteView = (s, p) => {
+    const mp = s.input.mouse.position;
+    const pos = { x: -((p.position.x - palette_1.paletteDimensions.w / 2 - mp.x) / palette_1.paletteDimensions.w),
+        y: -((p.position.y - palette_1.paletteDimensions.h / 2 + mp.y) / palette_1.paletteDimensions.h)
+    };
+    const sh = p.material;
+    const u = sh.uniforms;
+    u.mousePosition.value = pos;
 };
 
 
@@ -51683,6 +51688,8 @@ function makeSamplesMesh() {
     });
 }
 exports.makeSamplesMesh = makeSamplesMesh;
+exports.updateSamplesView = (s, sm) => {
+};
 // export const updateSamplesDataTexture: () => void = () => {
 //   const dataArray = new Uint8Array(samplesData().toArray())
 //   const texture = new DataTexture(dataArray, 1, 10, RGBFormat)

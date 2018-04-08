@@ -87,18 +87,16 @@ export async function makeFullPaletteMesh(): Promise<Option<Mesh>> {
   return makeOpt(palette)
 }
 
-export const updatePalette: (s: State) => void = (s: State) => {
-    // const m : Point      = s.input.mouse.position
-    // const t : ThreeState = s.three
-    // const p : Mesh       = t.meshes.get("palette")
+export const updatePaletteView: (s: State, p: Mesh) => void = (s: State, p: Mesh) => {
+    const mp = s.input.mouse.position
 
-    // const pos: Point =
-    //   { x: -((p.position.x - paletteDimensions.w / 2 - m.x) / paletteDimensions.w)
-    //   , y: -((p.position.y - paletteDimensions.h / 2 + m.y) / paletteDimensions.h)
-    //   }
+    const pos: Point =
+      { x: -((p.position.x - paletteDimensions.w / 2 - mp.x) / paletteDimensions.w)
+      , y: -((p.position.y - paletteDimensions.h / 2 + mp.y) / paletteDimensions.h)
+      }
 
-    // const ps: ShaderMaterial  = p.material  as ShaderMaterial
-    // const u:  PaletteUniforms = ps.uniforms as PaletteUniforms
+    const sh: ShaderMaterial  = p.material  as ShaderMaterial
+    const u:  PaletteUniforms = sh.uniforms as PaletteUniforms
     
-    // u.mousePosition.value = pos
+    u.mousePosition.value = pos
 }
