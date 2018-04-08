@@ -24,6 +24,10 @@ import
   } from "../Models/state"
 
 import
+  { Mailbox
+  } from "../Models/mail"
+
+import
   { characterData
   , characterPosition
   , characterDimensions
@@ -44,22 +48,6 @@ export type CharacterShaderData =
   , vertexShader   : string
   , fragmentShader : string
   }
-
-export const updateCharacter: (s: State) => void = (s: State) => {
-  // const m : Point      = s.input.mouse.position
-  // const t : ThreeState = s.three
-  // const c : Mesh       = t.meshes.get("character")
-
-  // const pos:  Point =
-  //   { x: -((c.position.x - characterDimensions.w / 2 - m.x) / characterDimensions.w)
-  //   , y: -((c.position.y - characterDimensions.h / 2 + m.y) / characterDimensions.h)
-  //   }
-
-  // const cs : ShaderMaterial    = c.material  as ShaderMaterial
-  // const u  : CharacterUniforms = cs.uniforms as CharacterUniforms
-  
-  // u.mousePosition.value = pos
-}
 
 export async function makeCharacterMesh(): Promise<Option<Mesh>> {
   const dataArray = new Uint8Array(characterData().toArray())
@@ -95,6 +83,31 @@ export async function makeCharacterMesh(): Promise<Option<Mesh>> {
 
   return makeOpt(character)
 }
+
+export const updateCharacterView: (s: State, m: Mesh) => void = (s: State, m: Mesh) => {
+  const mp = s.input.mouse.position
+  const mb = s.mailbox.characterMail
+
+  const pos:  Point =
+    { x: -((m.position.x - characterDimensions.w / 2 - mp.x) / characterDimensions.w)
+    , y: -((m.position.y - characterDimensions.h / 2 + mp.y) / characterDimensions.h)
+    }
+
+  const sh : ShaderMaterial    = m.material  as ShaderMaterial
+  const u  : CharacterUniforms = sh.uniforms as CharacterUniforms
+  
+  u.mousePosition.value = pos
+
+  // mb.forEach(x => {
+
+  // })
+}
+
+  // const m : Point      = s.input.mouse.position
+  // const t : ThreeState = s.three
+  // const c : Mesh       = t.meshes.get("character")
+
+  
 
 // export const makeCharacterMesh: () => Mesh = () => {
 //   const characterSize: number = 16

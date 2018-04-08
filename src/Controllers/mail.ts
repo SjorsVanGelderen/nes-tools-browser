@@ -22,7 +22,6 @@ export const mailboxZero: Mailbox =
   , threeMail     : List()
   }
 
-
 export const updateMailbox: (s: State) => State = (s: State) => {
   return { ...s, mailbox: mailboxZero }
 }

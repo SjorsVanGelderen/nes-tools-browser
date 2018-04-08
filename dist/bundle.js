@@ -5135,6 +5135,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const immutable_1 = __webpack_require__(1);
 const three_1 = __webpack_require__(4);
 const ColorSpec = __webpack_require__(13);
+const utils_1 = __webpack_require__(0);
 const screen_1 = __webpack_require__(2);
 const input_1 = __webpack_require__(5);
 const palette_1 = __webpack_require__(14);
@@ -5190,8 +5191,11 @@ exports.makeSurfaceGeometry = (dimensions) => {
     return geometry;
 };
 exports.updateThree = (s) => {
-    // Palette.updatePalette(s)
-    // Character.updateCharacter(s)
+    const t = s.three;
+    const cm = t.meshes.get("character");
+    const c = cm != undefined ? cm : utils_1.emptyOpt();
+    if (c.kind == "some")
+        character_1.updateCharacterView(s, c.value);
     return s;
 };
 
@@ -51755,18 +51759,6 @@ const utils_1 = __webpack_require__(0);
 const three_2 = __webpack_require__(3);
 const character_1 = __webpack_require__(9);
 const character_2 = __webpack_require__(20);
-exports.updateCharacter = (s) => {
-    // const m : Point      = s.input.mouse.position
-    // const t : ThreeState = s.three
-    // const c : Mesh       = t.meshes.get("character")
-    // const pos:  Point =
-    //   { x: -((c.position.x - characterDimensions.w / 2 - m.x) / characterDimensions.w)
-    //   , y: -((c.position.y - characterDimensions.h / 2 + m.y) / characterDimensions.h)
-    //   }
-    // const cs : ShaderMaterial    = c.material  as ShaderMaterial
-    // const u  : CharacterUniforms = cs.uniforms as CharacterUniforms
-    // u.mousePosition.value = pos
-};
 function makeCharacterMesh() {
     return __awaiter(this, void 0, void 0, function* () {
         const dataArray = new Uint8Array(character_1.characterData().toArray());
@@ -51796,6 +51788,21 @@ function makeCharacterMesh() {
     });
 }
 exports.makeCharacterMesh = makeCharacterMesh;
+exports.updateCharacterView = (s, m) => {
+    const mp = s.input.mouse.position;
+    const mb = s.mailbox.characterMail;
+    const pos = { x: -((m.position.x - character_1.characterDimensions.w / 2 - mp.x) / character_1.characterDimensions.w),
+        y: -((m.position.y - character_1.characterDimensions.h / 2 + mp.y) / character_1.characterDimensions.h)
+    };
+    const sh = m.material;
+    const u = sh.uniforms;
+    u.mousePosition.value = pos;
+    // mb.forEach(x => {
+    // })
+};
+// const m : Point      = s.input.mouse.position
+// const t : ThreeState = s.three
+// const c : Mesh       = t.meshes.get("character")
 // export const makeCharacterMesh: () => Mesh = () => {
 //   const characterSize: number = 16
 //   const characterData: List<number> = Range(0, characterSize ** 2 * 3).map(x => 255).toList()

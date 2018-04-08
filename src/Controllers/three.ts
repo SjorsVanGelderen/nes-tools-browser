@@ -53,6 +53,7 @@ import
 
 import
   { makeCharacterMesh
+  , updateCharacterView
   } from "../Views/character"
 
 export async function threeStateZero(): Promise<ThreeState> {
@@ -135,7 +136,11 @@ export const makeSurfaceGeometry: (dimensions: Vector2) => Geometry =
   }
 
 export const updateThree: (s: State) => State = (s: State) => {
-  // Palette.updatePalette(s)
-  // Character.updateCharacter(s)
+  const t  = s.three
+  const cm = t.meshes.get("character")
+  const c  = cm != undefined ? cm : emptyOpt<Mesh>()
+
+  if(c.kind == "some") updateCharacterView(s, c.value)
+
   return s
 }
