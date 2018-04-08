@@ -34,3 +34,37 @@ export const run: <A, B>(f: Func<A, B>) => <C>(g: Switch<B, C>) => any =
   <A, B>(f: Func<A, B>) => <C>(g: Switch<B, C>) => g == "with"
       ? f
       : run(compose(f, g))
+
+// Thanks to Shovon Hasan
+// https://blog.shovonhasan.com/using-promises-with-filereader/
+export async function readTextFile(path: string): Promise<Option<string>> {
+  const blob: Promise<Option<Blob>> = fetch(path)
+    .then(x => x.blob())
+    .then(x => makeOpt(x))
+    .catch(x => {
+      console.log("Failed to load file")
+      return emptyOpt<Blob>()
+    })
+
+  const blobResult = await blob
+
+  if(blobResult.kind == "some") {
+    const reader: FileReader = new FileReader()
+
+    return new Promise<Option<string>>((resolve, reject) => {
+      reader.onerror = () => {
+        reader.abort()
+        reject(new DOMException(`Error reading $(path)`))
+      }
+
+      reader.onload = () => {
+        resolve(makeOpt(reader.result))
+      }
+
+      reader.readAsText(blobResult.value)
+    })
+  }
+  else {
+    return emptyOpt<string>()
+  }
+}

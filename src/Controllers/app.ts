@@ -60,8 +60,8 @@ const tick: (s: State) => void = (s: State) => {
   window.requestAnimationFrame(() => tick(newState))
 }
 
-const start: () => void = () => {
-  const state: State = stateZero()
+async function start(): Promise<void> {
+  const state: State = await stateZero()
   window.requestAnimationFrame(() => tick(state))
 }
 

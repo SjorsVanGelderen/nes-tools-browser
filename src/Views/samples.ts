@@ -9,6 +9,12 @@ import
   } from "three"
 
 import
+  { Option
+  , makeOpt
+  , emptyOpt
+  } from "../utils"
+
+import
   { makeSurfaceGeometry
   } from "../Controllers/three"
 
@@ -38,35 +44,40 @@ export type SamplesShaderData =
   , fragmentShader : string
   }
 
-export const makeSamplesMesh: () => Mesh = 
-  () => {
-    const dataArray = new Uint8Array(samplesData().toArray())
+export async function makeSamplesMesh(): Promise<Option<Mesh>> { 
+  const dataArray = new Uint8Array(samplesData().toArray())
 
-    const texture = new DataTexture(dataArray, 1, 10, RGBFormat)
-    texture.needsUpdate = true
+  const texture = new DataTexture(dataArray, 1, 10, RGBFormat)
+  texture.needsUpdate = true
 
-    const uniforms: SamplesUniforms =
-      { texture       : new Uniform(texture)
-      , mousePosition : new Uniform(new Vector2(0, 0))
-      }
+  const uniforms: SamplesUniforms =
+    { texture       : new Uniform(texture)
+    , mousePosition : new Uniform(new Vector2(0, 0))
+    }
 
-    const shaderData: SamplesShaderData =
-      { uniforms       : uniforms
-      , vertexShader   : samplesVert
-      , fragmentShader : samplesFrag
-      }
+  const vert = await samplesVert()
+  if(vert.kind == "none") return emptyOpt()
 
-    const dimensions = new Vector2(samplesDimensions.w, samplesDimensions.h)
-    const material   = new ShaderMaterial(shaderData)
-    const geometry   = makeSurfaceGeometry(dimensions)
-    const samples    = new Mesh(geometry, material)
+  const frag = await samplesFrag()
+  if(frag.kind == "none") return emptyOpt()
 
-    samples.matrixAutoUpdate = false
-    samples.position.set(samplesPosition.x, samplesPosition.y, 0)
-    samples.updateMatrix()
+  const shaderData: SamplesShaderData =
+    { uniforms       : uniforms
+    , vertexShader   : vert.value
+    , fragmentShader : frag.value
+    }
 
-    return samples
-  }
+  const dimensions = new Vector2(samplesDimensions.w, samplesDimensions.h)
+  const material   = new ShaderMaterial(shaderData)
+  const geometry   = makeSurfaceGeometry(dimensions)
+  const samples    = new Mesh(geometry, material)
+
+  samples.matrixAutoUpdate = false
+  samples.position.set(samplesPosition.x, samplesPosition.y, 0)
+  samples.updateMatrix()
+
+  return makeOpt(samples)
+}
 
 // export const updateSamplesDataTexture: () => void = () => {
   //   const dataArray = new Uint8Array(samplesData().toArray())

@@ -26,12 +26,14 @@ import
   { State
   } from "../Models/state"
 
-export const stateZero: () => State = () => (
-  { three     : threeStateZero()
-  , input     : inputStateZero()
-  , character : characterStateZero
-  , palette   : paletteStateZero
-  , samples   : samplesStateZero
-  , mailbox   : mailboxZero
-  }
-)
+export async function stateZero(): Promise<State> {
+  return (
+    { three     : await threeStateZero()
+    , input     : inputStateZero()
+    , character : characterStateZero
+    , palette   : paletteStateZero
+    , samples   : samplesStateZero
+    , mailbox   : mailboxZero
+    }
+  )
+}

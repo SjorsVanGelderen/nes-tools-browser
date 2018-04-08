@@ -1,20 +1,14 @@
-export const surfaceVert: string = `
-varying vec2 vUv;
+import
+  { Option
+  , readTextFile
+  } from "../../utils"
 
-void main()
-{
-  vUv = uv;
-  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+export async function surfaceVert(): Promise<Option<string>> {
+  const result = await readTextFile("Shaders/surface.vert")
+  return result
 }
-`
 
-export const surfaceFrag: string = `
-uniform sampler2D texture;
-
-varying vec2 vUv;
-
-void main()
-{
-  gl_FragColor = texture2D(texture, vUv);
+export async function surfaceFrag(): Promise<Option<string>> {
+  const result = await readTextFile("Shaders/surface.frag")
+  return result
 }
-`

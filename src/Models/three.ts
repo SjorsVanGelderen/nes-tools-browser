@@ -10,10 +10,14 @@ import
   , ShaderMaterial
   } from "three"
 
+import
+  { Option
+  } from "../utils"
+
 export type ThreeState =
   { scene    : Scene
   , camera   : OrthographicCamera
   , renderer : WebGLRenderer
-  , meshes   : Map<string, Mesh>
-  , shaders  : Map<string, ShaderMaterial>
+  , meshes   : Map<string, Option<Mesh>>
+  // , shaders  : Map<string, ShaderMaterial>
   }

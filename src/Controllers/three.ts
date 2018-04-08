@@ -18,6 +18,12 @@ import
 import * as ColorSpec from "../color"
 
 import
+  { Option
+  , makeOpt
+  , emptyOpt
+  } from "../utils"
+
+import
   { frustumSize
   , aspectRatio
   } from "../screen"
@@ -49,28 +55,32 @@ import
   { makeCharacterMesh
   } from "../Views/character"
 
-export const threeStateZero: () => ThreeState = () => {
+export async function threeStateZero(): Promise<ThreeState> {
   const scene    : Scene              = makeScene()
   const camera   : OrthographicCamera = makeCamera()
   const renderer : WebGLRenderer      = makeRenderer()
 
-  const meshes = Map<string, Mesh>(
-    [ [ "palette"   , makeFullPaletteMesh() ]
-    , [ "samples"   , makeSamplesMesh()     ]
-    , [ "character" , makeCharacterMesh()   ]
+  const paletteMesh   : Option<Mesh> = await makeFullPaletteMesh()
+  const samplesMesh   : Option<Mesh> = await makeSamplesMesh()
+  const characterMesh : Option<Mesh> = await makeCharacterMesh()
+
+  const meshes = Map<string, Option<Mesh>>(
+    [ [ "palette"   , paletteMesh   ]
+    , [ "samples"   , samplesMesh   ]
+    , [ "character" , characterMesh ]
     ]
   )
 
-  meshes.valueSeq().forEach(x => x != undefined ? scene.add(x) : {})
+  meshes.valueSeq().forEach(x => x != undefined ? x.kind == "some" ? scene.add(x.value) : {} : {})
 
-  const shaders = Map<string, ShaderMaterial>()
+  // \const shaders = Map<string, ShaderMaterial>()
 
   return (
     { scene    : scene
     , camera   : camera
     , renderer : renderer
     , meshes   : meshes
-    , shaders  : shaders
+    // , shaders  : shaders
     }
   )
 }

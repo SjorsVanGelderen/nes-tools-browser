@@ -10,6 +10,9 @@ import
 
 import
   { Point
+  , Option
+  , makeOpt
+  , emptyOpt
   } from "../utils"
 
 import
@@ -58,35 +61,40 @@ export const updateCharacter: (s: State) => void = (s: State) => {
   // u.mousePosition.value = pos
 }
 
-export const makeCharacterMesh: () => Mesh = 
-    () => {
-      const dataArray = new Uint8Array(characterData().toArray())
+export async function makeCharacterMesh(): Promise<Option<Mesh>> {
+  const dataArray = new Uint8Array(characterData().toArray())
 
-      const texture = new DataTexture(dataArray, 128, 128, RGBFormat)
-      texture.needsUpdate = true
+  const texture = new DataTexture(dataArray, 128, 128, RGBFormat)
+  texture.needsUpdate = true
 
-      const uniforms: CharacterUniforms =
-        { texture       : new Uniform(texture)
-        , mousePosition : new Uniform(new Vector2(0, 0))
-        }
-
-      const shaderData: CharacterShaderData =
-        { uniforms       : uniforms
-        , vertexShader   : characterVert
-        , fragmentShader : characterFrag
-        }
-
-      const dimensions = new Vector2(characterDimensions.w, characterDimensions.h)
-      const material   = new ShaderMaterial(shaderData)
-      const geometry   = makeSurfaceGeometry(dimensions)
-      const character  = new Mesh(geometry, material)
-
-      character.matrixAutoUpdate = false
-      character.position.set(characterPosition.x, characterPosition.y, -1)
-      character.updateMatrix()
-
-      return character
+  const uniforms: CharacterUniforms =
+    { texture       : new Uniform(texture)
+    , mousePosition : new Uniform(new Vector2(0, 0))
     }
+
+  const vert = await characterVert()
+  if(vert.kind == "none") return emptyOpt<Mesh>()
+
+  const frag = await characterFrag()
+  if(frag.kind == "none") return emptyOpt<Mesh>()
+
+  const shaderData: CharacterShaderData =
+    { uniforms       : uniforms
+    , vertexShader   : vert.value
+    , fragmentShader : frag.value
+    }
+
+  const dimensions = new Vector2(characterDimensions.w, characterDimensions.h)
+  const material   = new ShaderMaterial(shaderData)
+  const geometry   = makeSurfaceGeometry(dimensions)
+  const character  = new Mesh(geometry, material)
+
+  character.matrixAutoUpdate = false
+  character.position.set(characterPosition.x, characterPosition.y, -1)
+  character.updateMatrix()
+
+  return makeOpt(character)
+}
 
 // export const makeCharacterMesh: () => Mesh = () => {
 //   const characterSize: number = 16

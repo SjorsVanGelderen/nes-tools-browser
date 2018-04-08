@@ -10,6 +10,9 @@ import
 
 import
   { Point
+  , Option
+  , makeOpt
+  , emptyOpt
   } from "../utils"
 
 import
@@ -42,7 +45,7 @@ export type PaletteShaderData =
   , fragmentShader : string
   }
 
-export const makeFullPaletteMesh: () => Mesh = () => {
+export async function makeFullPaletteMesh(): Promise<Option<Mesh>> {
   const resolution = { x: 4, y: 16 }
   const dataArray  = new Uint8Array(paletteData.toArray())
 
@@ -60,10 +63,16 @@ export const makeFullPaletteMesh: () => Mesh = () => {
     , mousePosition : new Uniform(new Vector2(0, 0))
     }
 
+  const vert = await paletteVert()
+  if(vert.kind == "none") return emptyOpt()
+
+  const frag = await paletteFrag()
+  if(frag.kind == "none") return emptyOpt()
+
   const shaderData: PaletteShaderData =
     { uniforms       : uniforms
-    , vertexShader   : paletteVert
-    , fragmentShader : paletteFrag
+    , vertexShader   : vert.value
+    , fragmentShader : frag.value
     }
 
   const dimensions = new Vector2(paletteDimensions.w, paletteDimensions.h)
@@ -75,7 +84,7 @@ export const makeFullPaletteMesh: () => Mesh = () => {
   palette.position.set(palettePosition.x, palettePosition.y, 0)
   palette.updateMatrix()
 
-  return palette
+  return makeOpt(palette)
 }
 
 export const updatePalette: (s: State) => void = (s: State) => {
