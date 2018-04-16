@@ -5154,7 +5154,7 @@ function threeStateZero() {
             ["character", characterMesh]
         ]);
         meshes.valueSeq().forEach(x => x != undefined ? x.kind == "some" ? scene.add(x.value) : {} : {});
-        // \const shaders = Map<string, ShaderMaterial>()
+        // const shaders = Map<string, ShaderMaterial>()
         return ({ scene: scene,
             camera: camera,
             renderer: renderer,
@@ -51689,6 +51689,13 @@ function makeSamplesMesh() {
 }
 exports.makeSamplesMesh = makeSamplesMesh;
 exports.updateSamplesView = (s, sm) => {
+    const mp = s.input.mouse.position;
+    const pos = { x: -((sm.position.x - samples_1.samplesDimensions.w / 2 - mp.x) / samples_1.samplesDimensions.w),
+        y: -((sm.position.y - samples_1.samplesDimensions.h / 2 + mp.y) / samples_1.samplesDimensions.h)
+    };
+    const sh = sm.material;
+    const u = sh.uniforms;
+    u.mousePosition.value = pos;
 };
 // export const updateSamplesDataTexture: () => void = () => {
 //   const dataArray = new Uint8Array(samplesData().toArray())

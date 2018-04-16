@@ -76,7 +76,7 @@ export async function threeStateZero(): Promise<ThreeState> {
 
   meshes.valueSeq().forEach(x => x != undefined ? x.kind == "some" ? scene.add(x.value) : {} : {})
 
-  // \const shaders = Map<string, ShaderMaterial>()
+  // const shaders = Map<string, ShaderMaterial>()
 
   return (
     { scene    : scene

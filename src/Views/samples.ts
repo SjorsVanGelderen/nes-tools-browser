@@ -12,6 +12,7 @@ import
   { Option
   , makeOpt
   , emptyOpt
+  , Point
   } from "../utils"
 
 import
@@ -80,7 +81,17 @@ export async function makeSamplesMesh(): Promise<Option<Mesh>> {
 }
 
 export const updateSamplesView: (s: State, sm: Mesh) => void = (s: State, sm: Mesh) => {
+  const mp = s.input.mouse.position
+
+  const pos: Point =
+    { x: -((sm.position.x - samplesDimensions.w / 2 - mp.x) / samplesDimensions.w)
+    , y: -((sm.position.y - samplesDimensions.h / 2 + mp.y) / samplesDimensions.h)
+    }
+
+  const sh: ShaderMaterial  = sm.material  as ShaderMaterial
+  const u:  SamplesUniforms = sh.uniforms as SamplesUniforms
   
+  u.mousePosition.value = pos
 }
 
 // export const updateSamplesDataTexture: () => void = () => {
