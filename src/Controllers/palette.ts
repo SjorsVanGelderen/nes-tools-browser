@@ -6,6 +6,7 @@ import
 import
   { Point
   , Dimensions
+  , surfaceContains
   } from "../utils"
 
 import
@@ -40,7 +41,7 @@ export const palettePosition: Point =
 
 export const paletteStateZero: PaletteState = 
   { position   : palettePosition
-  , background : 64
+  // , background : 64
   }
 
 export const paletteData: List<number> =
@@ -51,17 +52,32 @@ export const paletteData: List<number> =
     return List([ p.r, p.g, p.b ])
   }).toList()
 
+const getPaletteSelection: (p: Point) => number = (p: Point) => {
+  const pos: Point =
+    { x: -((palettePosition.x - paletteDimensions.w / 2 - p.x) / paletteDimensions.w)
+    , y: -((palettePosition.y - paletteDimensions.h / 2 + p.y) / paletteDimensions.h)
+    }
+
+  return Math.floor(pos.x * 4) + 4 * Math.floor(pos.y * 16)
+}
+
 export const updatePalette: (s: State) => State = (s: State) => {
   const i  = s.input
   const m  = i.mouse
   const p  = s.palette
   const mb = s.mailbox
 
-  const sm = m.click.kind == "some" && m.click.value.x > 0
+  const selection =
+    m.click.kind == "some"
+      ? surfaceContains(palettePosition, paletteDimensions, m.click.value)
+          ? getPaletteSelection(m.click.value)
+          : "none"
+      : "none"
+
+  const sm = selection != "none"
     ? mb.samplesMail.push(
       { kind         : "ModifySample"
-      , samplesIndex : 0
-      , paletteIndex : Math.floor(Math.random() * 64)
+      , paletteIndex : selection
       }
     )
     : mb.samplesMail

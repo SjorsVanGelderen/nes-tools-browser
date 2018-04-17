@@ -27,6 +27,7 @@ import
   { samplesData
   , samplesPosition
   , samplesDimensions
+  , samplesStateZero
   } from "../Controllers/samples"
 
 import
@@ -37,6 +38,7 @@ import
 export type SamplesUniforms =
   { texture       : Uniform
   , mousePosition : Uniform
+  , activeSample  : Uniform
   }
 
 export type SamplesShaderData =
@@ -46,7 +48,7 @@ export type SamplesShaderData =
   }
 
 export async function makeSamplesMesh(): Promise<Option<Mesh>> { 
-  const dataArray = new Uint8Array(samplesData().toArray())
+  const dataArray = new Uint8Array(samplesData(samplesStateZero).toArray())
 
   const texture = new DataTexture(dataArray, 1, 10, RGBFormat)
   texture.needsUpdate = true
@@ -54,6 +56,7 @@ export async function makeSamplesMesh(): Promise<Option<Mesh>> {
   const uniforms: SamplesUniforms =
     { texture       : new Uniform(texture)
     , mousePosition : new Uniform(new Vector2(0, 0))
+    , activeSample  : new Uniform(0)
     }
 
   const vert = await samplesVert()
@@ -88,10 +91,17 @@ export const updateSamplesView: (s: State, sm: Mesh) => void = (s: State, sm: Me
     , y: -((sm.position.y - samplesDimensions.h / 2 + mp.y) / samplesDimensions.h)
     }
 
-  const sh: ShaderMaterial  = sm.material  as ShaderMaterial
+  const dataArray = new Uint8Array(samplesData(s.samples).toArray())
+
+  const texture = new DataTexture(dataArray, 1, 10, RGBFormat)
+  texture.needsUpdate = true
+
+  const sh: ShaderMaterial  = sm.material as ShaderMaterial
   const u:  SamplesUniforms = sh.uniforms as SamplesUniforms
   
   u.mousePosition.value = pos
+  u.texture.value       = texture
+  u.activeSample.value  = s.samples.activeSample
 }
 
 // export const updateSamplesDataTexture: () => void = () => {

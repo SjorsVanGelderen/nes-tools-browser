@@ -39,8 +39,10 @@ export const samplesStateZero: SamplesState =
       , List([ 9, 10, 11 ])
       ]
     )
-  , background : 0
-  , active     : 0
+  , background   : 0
+  , activeSample : 0
+  , activeIndex  : 0
+  , dirtyTexture : false
   }
 
 export const samplesDimensions: Dimensions =
@@ -53,10 +55,10 @@ export const samplesPosition: Point =
   , y: 0
   }
 
-export const samplesData: () => List<number> = () => {
-  const b = fullPalette.get(samplesStateZero.background)
+export const samplesData: (s: SamplesState) => List<number> = (s: SamplesState) => {
+  const b = fullPalette.get(s.background)
 
-  return samplesStateZero.samples.flatMap(x => {
+  return s.samples.flatMap(x => {
     if(x == undefined) return List<number>()
 
     const p = List<PaletteColor>(
@@ -86,26 +88,23 @@ export const updateSamples: (s: State) => State = (s: State) => {
 
   const modMail = mb.samplesMail.find(x => x != undefined ? x.kind == "ModifySample" : false)
 
-  const newSm: List<Sample> = modMail
-    ? sm.setIn([sp.active, modMail.samplesIndex], modMail.paletteIndex)
-    : sm
-  
-  if(m.click.kind == "some") {
-    
-  }
+  const newSm = modMail
+    ? sm.setIn([sp.activeSample, sp.activeIndex], modMail.paletteIndex)
+    : "none"
 
-  const newActive = m.click.kind == "some"
-    ? rectContains(samplesPosition, samplesDimensions, m.click.value)
-      ? 4
-      : 0
-    : sp.active
+  // const newActive = m.click.kind == "some"
+  //   ? rectContains(samplesPosition, samplesDimensions, m.click.value)
+  //     ? 4
+  //     : 0
+  //   : sp.active
 
   const newState: State =
     { ...s
     , samples:
       { ...s.samples
-      , samples: newSm
-      , active: newActive
+      , samples: newSm != "none" ? newSm : sm
+      // , active:  newActive
+      , dirtyTexture: newSm != "none"
       }
     , mailbox: { ...mb, samplesMail: List() }
     }

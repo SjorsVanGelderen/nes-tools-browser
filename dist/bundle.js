@@ -85,6 +85,10 @@ exports.rectContains = (topLeft, d, p) => p.x > topLeft.x
     && p.x < topLeft.x + d.w
     && p.y > topLeft.y
     && p.y < topLeft.y + d.h;
+exports.surfaceContains = (center, d, p) => p.x > center.x - d.w / 2
+    && p.x < center.x + d.w / 2
+    && p.y > center.y - d.h / 2
+    && p.y < center.y + d.h / 2;
 exports.compose = (f, g) => (x) => g(f(x));
 exports.run = (f) => (g) => g == "with"
     ? f
@@ -51219,6 +51223,7 @@ exports.updateInput = (s) => {
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const immutable_1 = __webpack_require__(1);
+const utils_1 = __webpack_require__(0);
 const screen_1 = __webpack_require__(2);
 const palette_1 = __webpack_require__(7);
 exports.paletteDimensions = { w: screen_1.frustumSize / 4,
@@ -51227,8 +51232,8 @@ exports.paletteDimensions = { w: screen_1.frustumSize / 4,
 exports.palettePosition = { x: (screen_1.frustumSize * screen_1.aspectRatio) / 2 - exports.paletteDimensions.w / 2,
     y: 0
 };
-exports.paletteStateZero = { position: exports.palettePosition,
-    background: 64
+exports.paletteStateZero = { position: exports.palettePosition
+    // , background : 64
 };
 exports.paletteData = immutable_1.Range(0, 64).flatMap((_, i) => {
     if (i == undefined)
@@ -51236,15 +51241,25 @@ exports.paletteData = immutable_1.Range(0, 64).flatMap((_, i) => {
     const p = palette_1.fullPalette.get(i);
     return immutable_1.List([p.r, p.g, p.b]);
 }).toList();
+const getPaletteSelection = (p) => {
+    const pos = { x: -((exports.palettePosition.x - exports.paletteDimensions.w / 2 - p.x) / exports.paletteDimensions.w),
+        y: -((exports.palettePosition.y - exports.paletteDimensions.h / 2 + p.y) / exports.paletteDimensions.h)
+    };
+    return Math.floor(pos.x * 4) + 4 * Math.floor(pos.y * 16);
+};
 exports.updatePalette = (s) => {
     const i = s.input;
     const m = i.mouse;
     const p = s.palette;
     const mb = s.mailbox;
-    const sm = m.click.kind == "some" && m.click.value.x > 0
+    const selection = m.click.kind == "some"
+        ? utils_1.surfaceContains(exports.palettePosition, exports.paletteDimensions, m.click.value)
+            ? getPaletteSelection(m.click.value)
+            : "none"
+        : "none";
+    const sm = selection != "none"
         ? mb.samplesMail.push({ kind: "ModifySample",
-            samplesIndex: 0,
-            paletteIndex: Math.floor(Math.random() * 64)
+            paletteIndex: selection
         })
         : mb.samplesMail;
     const newMb = Object.assign({}, mb, { samplesMail: sm });
@@ -51336,7 +51351,6 @@ exports.fullPalette = immutable_1.List([{ r: 101, g: 101, b: 101 },
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const immutable_1 = __webpack_require__(1);
-const utils_1 = __webpack_require__(0);
 const screen_1 = __webpack_require__(2);
 const palette_1 = __webpack_require__(7);
 exports.samplesStateZero = { samples: immutable_1.List([immutable_1.List([0, 1, 2]),
@@ -51345,7 +51359,9 @@ exports.samplesStateZero = { samples: immutable_1.List([immutable_1.List([0, 1, 
         immutable_1.List([9, 10, 11])
     ]),
     background: 0,
-    active: 0
+    activeSample: 0,
+    activeIndex: 0,
+    dirtyTexture: false
 };
 exports.samplesDimensions = { w: screen_1.frustumSize / 16,
     h: screen_1.frustumSize / 16 * 10
@@ -51353,9 +51369,9 @@ exports.samplesDimensions = { w: screen_1.frustumSize / 16,
 exports.samplesPosition = { x: -screen_1.frustumSize * screen_1.aspectRatio / 2 + exports.samplesDimensions.w / 2,
     y: 0
 };
-exports.samplesData = () => {
-    const b = palette_1.fullPalette.get(exports.samplesStateZero.background);
-    return exports.samplesStateZero.samples.flatMap(x => {
+exports.samplesData = (s) => {
+    const b = palette_1.fullPalette.get(s.background);
+    return s.samples.flatMap(x => {
         if (x == undefined)
             return immutable_1.List();
         const p = immutable_1.List([palette_1.fullPalette.get(x.get(0)),
@@ -51377,16 +51393,14 @@ exports.updateSamples = (s) => {
     const m = s.input.mouse;
     const modMail = mb.samplesMail.find(x => x != undefined ? x.kind == "ModifySample" : false);
     const newSm = modMail
-        ? sm.setIn([sp.active, modMail.samplesIndex], modMail.paletteIndex)
-        : sm;
-    if (m.click.kind == "some") {
-    }
-    const newActive = m.click.kind == "some"
-        ? utils_1.rectContains(exports.samplesPosition, exports.samplesDimensions, m.click.value)
-            ? 4
-            : 0
-        : sp.active;
-    const newState = Object.assign({}, s, { samples: Object.assign({}, s.samples, { samples: newSm, active: newActive }), mailbox: Object.assign({}, mb, { samplesMail: immutable_1.List() }) });
+        ? sm.setIn([sp.activeSample, sp.activeIndex], modMail.paletteIndex)
+        : "none";
+    // const newActive = m.click.kind == "some"
+    //   ? rectContains(samplesPosition, samplesDimensions, m.click.value)
+    //     ? 4
+    //     : 0
+    //   : sp.active
+    const newState = Object.assign({}, s, { samples: Object.assign({}, s.samples, { samples: newSm != "none" ? newSm : sm, dirtyTexture: newSm != "none" }), mailbox: Object.assign({}, mb, { samplesMail: immutable_1.List() }) });
     return newState;
 };
 
@@ -51661,11 +51675,12 @@ const samples_1 = __webpack_require__(8);
 const samples_2 = __webpack_require__(17);
 function makeSamplesMesh() {
     return __awaiter(this, void 0, void 0, function* () {
-        const dataArray = new Uint8Array(samples_1.samplesData().toArray());
+        const dataArray = new Uint8Array(samples_1.samplesData(samples_1.samplesStateZero).toArray());
         const texture = new three_1.DataTexture(dataArray, 1, 10, three_1.RGBFormat);
         texture.needsUpdate = true;
         const uniforms = { texture: new three_1.Uniform(texture),
-            mousePosition: new three_1.Uniform(new three_1.Vector2(0, 0))
+            mousePosition: new three_1.Uniform(new three_1.Vector2(0, 0)),
+            activeSample: new three_1.Uniform(0)
         };
         const vert = yield samples_2.samplesVert();
         if (vert.kind == "none")
@@ -51693,9 +51708,14 @@ exports.updateSamplesView = (s, sm) => {
     const pos = { x: -((sm.position.x - samples_1.samplesDimensions.w / 2 - mp.x) / samples_1.samplesDimensions.w),
         y: -((sm.position.y - samples_1.samplesDimensions.h / 2 + mp.y) / samples_1.samplesDimensions.h)
     };
+    const dataArray = new Uint8Array(samples_1.samplesData(s.samples).toArray());
+    const texture = new three_1.DataTexture(dataArray, 1, 10, three_1.RGBFormat);
+    texture.needsUpdate = true;
     const sh = sm.material;
     const u = sh.uniforms;
     u.mousePosition.value = pos;
+    u.texture.value = texture;
+    u.activeSample.value = s.samples.activeSample;
 };
 // export const updateSamplesDataTexture: () => void = () => {
 //   const dataArray = new Uint8Array(samplesData().toArray())

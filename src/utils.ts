@@ -15,11 +15,16 @@ export const pointZero: Point = { x: 0, y: 0 }
 export type Dimensions = { w: number, h: number }
 
 export const rectContains: (topLeft: Point, d: Dimensions, p: Point) => boolean =
-  (topLeft: Point, d: Dimensions, p: Point) =>
-       p.x > topLeft.x
-    && p.x < topLeft.x + d.w
-    && p.y > topLeft.y
-    && p.y < topLeft.y + d.h
+  (topLeft: Point, d: Dimensions, p: Point) => p.x > topLeft.x
+                                            && p.x < topLeft.x + d.w
+                                            && p.y > topLeft.y
+                                            && p.y < topLeft.y + d.h
+
+export const surfaceContains: (center: Point, d: Dimensions, p: Point) => boolean =
+  (center: Point, d: Dimensions, p: Point) => p.x > center.x - d.w / 2
+                                           && p.x < center.x + d.w / 2
+                                           && p.y > center.y - d.h / 2
+                                           && p.y < center.y + d.h / 2
 
 export type Func<A, B> = (_: A) => B
 

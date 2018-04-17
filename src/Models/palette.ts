@@ -11,7 +11,7 @@ export type Palette      = List<PaletteColor>
 
 export type PaletteState =
   { position   : Point
-  , background : number
+  // , background : number
   }
 
 export const fullPalette: Palette = List<PaletteColor>(
