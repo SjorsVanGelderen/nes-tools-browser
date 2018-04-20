@@ -22,17 +22,17 @@ void main()
                && uvPosition.y >= top
                && uvPosition.y <  bottom;
 
-  bool onBorder =  uvPosition.x - left         < bSize * hPart
-                || right        - uvPosition.x < bSize * hPart
-                || uvPosition.y - top          < bSize * vPart
-                || bottom       - uvPosition.y < bSize * vPart;
+  bool onBorder =  uvPosition.x < bSize * hPart
+                || uvPosition.x > hPart - bSize * hPart
+                || mod(uvPosition.y, vPart) < bSize * vPart
+                || mod(uvPosition.y, vPart) > vPart - bSize * vPart;
 
   bool onActive = int(floor(uvPosition.y / vPart)) == activeSample;
 
   vec4 tColor = texture2D(texture, uvPosition);
 
   gl_FragColor =
-    onBorder 
+    onBorder
     ? onHover
       ? bColor
       : onActive
